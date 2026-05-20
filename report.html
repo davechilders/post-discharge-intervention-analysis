@@ -1,0 +1,4222 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.8.26">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Assessing Impact of Post-Discharge Care Mangement on Hospital Readmissions</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="report_files/libs/clipboard/clipboard.min.js"></script>
+<script src="report_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="report_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="report_files/libs/quarto-html/axe/axe-check.js" type="module"></script>
+<script src="report_files/libs/quarto-html/popper.min.js"></script>
+<script src="report_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="report_files/libs/quarto-html/anchor.min.js"></script>
+<link href="report_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="report_files/libs/quarto-html/quarto-syntax-highlighting-587c61ba64f3a5504c4d52d930310e48.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="report_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="report_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="report_files/libs/bootstrap/bootstrap-d6a003b94517c951b2d65075d42fb01b.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="fullcontent quarto-light">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Assessing Impact of Post-Discharge Care Mangement on Hospital Readmissions</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(fs)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(arrow)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(lme4)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(broom)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(gt)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(scales)</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="fu">theme_set</span>(<span class="fu">theme_bw</span>())</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<section id="read-data" class="level2">
+<h2 class="anchored" data-anchor-id="read-data">Read Data</h2>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>prac <span class="ot">&lt;-</span> <span class="fu">read_parquet</span>(<span class="st">"practice-data.parquet"</span>)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>pat <span class="ot">&lt;-</span> <span class="fu">read_parquet</span>(<span class="st">"patients.parquet"</span>)</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>hosp <span class="ot">&lt;-</span> <span class="fu">read_parquet</span>(<span class="st">"hospitalizations.parquet"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+</section>
+<section id="overview" class="level2">
+<h2 class="anchored" data-anchor-id="overview">Overview</h2>
+<p>Under traditional fee-for-service reimbursement, a primary care practice has limited financial incentive to reduce hospitalizations among their patient population. Value-based care is a healthcare delivery and payment models that reward providers for the quality of care and cost efficient. For example, a primary care practice might enter a financial contract with an insurance company that involves reimbursing the practice for limiting the total healthcare expenditures for patients attributed to that practice.</p>
+<p>Hospital admissions are a substantial component of total US healthcare spending. Reducing hospital readmissions during the 30-day post-discharge window is an opportunity to improve patient outcomes while reducing costs. Under fee-for-service, there is little incentive to invest in post-discharge care management to reduce readmission rates. However, value-based care models offer an opportunity for primary care providers to receive reimbursement for the savings obtained by reducing readmissions.</p>
+</section>
+<section id="the-research-question" class="level2">
+<h2 class="anchored" data-anchor-id="the-research-question">The Research Question</h2>
+<p>For a program designed to reduce the prevalence of hospital readmissions, it is important to assess the impact of that program in order to determine if the cost of the program justifies the reduction in healthcare spend and improvement in patient outcomes.</p>
+<p>In this analysis, we use simulated data to demonstrate estimtaing the impact of a primary care practice incorporating post-discharge care management on the probability of hospital readmission for any cause during 30 days.</p>
+</section>
+<section id="drivers-of-readmission" class="level2">
+<h2 class="anchored" data-anchor-id="drivers-of-readmission">Drivers of Readmission</h2>
+<p>There are many factors beyond care management which may impact the probability of readmission, including:</p>
+<ul>
+<li>patient clinical factors such as primary diagnosis and comorbidities</li>
+<li>social drivers of heath including access to housing, social support, and transportation</li>
+<li>quality of primary care</li>
+</ul>
+</section>
+<section id="simulated-data" class="level2">
+<h2 class="anchored" data-anchor-id="simulated-data">Simulated Data</h2>
+<p>For this analysis, we simulate data on practices, patients, and hospitalizations.</p>
+<p>In a real-world scenario, we would expect to see the following in the data:</p>
+<ul>
+<li>independent practices will have varying numbers of providers</li>
+<li>the number of patients per practice will vary based on the number of providers and the payer max (e.g.&nbsp;heavy medicare practices tend to have smaller patient panels)</li>
+<li>the timing of the intervention will vary across practices</li>
+<li>the rate of both hospitalization and readmission will vary by both patient and practice characteristics</li>
+</ul>
+<p>The simulated data for this analysis (available [here]) incorporates all of these features.</p>
+<!--
+This is an overview of the simulation:
+
+- The simulation is over 80 primary care practices.
+- Because practices with more providers will have more attributed patients:
+- The number of providers per practice is simulated from $Poission(3)$ with a minimum of one provider at a practice
+- For a given practice, the payer mix simulated as follows:
+    - The medicaid payer proportion is simulated from $Uniform(0, 0.2)$
+    - The medicare payer proportion is simulated from $Uniform(0, 0.8)$
+    - Private payers are the remaining proportion
+    - For simplicity, we assume no self-pay or dual eligibility
+- Because of average utilization differences among medicare, medicaid, and private payer, practices with large simulated medicare patients have a higher volume of patients.
+- Age, gender, and medicare eligibility due to end-stage renal disease (ESRD) and social security disability (SSDI) are simulated
+-->
+</section>
+<section id="practice-data" class="level2">
+<h2 class="anchored" data-anchor-id="practice-data">Practice Data</h2>
+<p>This is a glimpse of the simulated practice data.</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">#summary(prac$intervention_start)</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>prac <span class="sc">%&gt;%</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">slice</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">8</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">gt</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">cols_label</span>(</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>        <span class="at">practice_id =</span> <span class="st">"Prac ID"</span>,</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>        <span class="at">n_providers =</span> <span class="st">"# Providers"</span>,</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>        <span class="at">n_medicare_pt =</span> <span class="st">"# Medicare Pts"</span>,</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>        <span class="at">n_medicaid_pt =</span> <span class="st">"# Medicaid Pts"</span>,</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>        <span class="at">n_private_pt =</span> <span class="st">"# Private Pts"</span>,</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>        <span class="at">n_pt =</span> <span class="st">"# Patients"</span>,</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>        <span class="at">has_intervention =</span> <span class="st">"Case Mgmt"</span>,</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>        <span class="at">intervention_start =</span> <span class="st">"Case Mgmt Start"</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>    ) <span class="sc">%&gt;%</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">tab_header</span>(<span class="st">"Practice Level Data"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">tab_footnote</span>(<span class="st">"This is the treatment variable"</span>, <span class="fu">cells_column_labels</span>(has_intervention)) <span class="sc">%&gt;%</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>    <span class="fu">tab_footnote</span>(<span class="st">"The intervention start date varies by practice between '2023-01-01' and '2025-11-01'"</span>, <span class="fu">cells_column_labels</span>(intervention_start)) <span class="sc">%&gt;%</span></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>    <span class="fu">fmt_number</span>(<span class="fu">starts_with</span>(<span class="st">"n_"</span>), <span class="at">decimals =</span> <span class="dv">0</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<div id="smxoclsnrh" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>#smxoclsnrh table {
+  font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#smxoclsnrh thead, #smxoclsnrh tbody, #smxoclsnrh tfoot, #smxoclsnrh tr, #smxoclsnrh td, #smxoclsnrh th {
+  border-style: none;
+}
+
+#smxoclsnrh p {
+  margin: 0;
+  padding: 0;
+}
+
+#smxoclsnrh .gt_table {
+  display: table;
+  border-collapse: collapse;
+  line-height: normal;
+  margin-left: auto;
+  margin-right: auto;
+  color: #333333;
+  font-size: 16px;
+  font-weight: normal;
+  font-style: normal;
+  background-color: #FFFFFF;
+  width: auto;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #A8A8A8;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #A8A8A8;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+}
+
+#smxoclsnrh .gt_caption {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+#smxoclsnrh .gt_title {
+  color: #333333;
+  font-size: 125%;
+  font-weight: initial;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-color: #FFFFFF;
+  border-bottom-width: 0;
+}
+
+#smxoclsnrh .gt_subtitle {
+  color: #333333;
+  font-size: 85%;
+  font-weight: initial;
+  padding-top: 3px;
+  padding-bottom: 5px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-color: #FFFFFF;
+  border-top-width: 0;
+}
+
+#smxoclsnrh .gt_heading {
+  background-color: #FFFFFF;
+  text-align: center;
+  border-bottom-color: #FFFFFF;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#smxoclsnrh .gt_bottom_border {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#smxoclsnrh .gt_col_headings {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#smxoclsnrh .gt_col_heading {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 6px;
+  padding-left: 5px;
+  padding-right: 5px;
+  overflow-x: hidden;
+}
+
+#smxoclsnrh .gt_column_spanner_outer {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+#smxoclsnrh .gt_column_spanner_outer:first-child {
+  padding-left: 0;
+}
+
+#smxoclsnrh .gt_column_spanner_outer:last-child {
+  padding-right: 0;
+}
+
+#smxoclsnrh .gt_column_spanner {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  overflow-x: hidden;
+  display: inline-block;
+  width: 100%;
+}
+
+#smxoclsnrh .gt_spanner_row {
+  border-bottom-style: hidden;
+}
+
+#smxoclsnrh .gt_group_heading {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  text-align: left;
+}
+
+#smxoclsnrh .gt_empty_group_heading {
+  padding: 0.5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: middle;
+}
+
+#smxoclsnrh .gt_from_md > :first-child {
+  margin-top: 0;
+}
+
+#smxoclsnrh .gt_from_md > :last-child {
+  margin-bottom: 0;
+}
+
+#smxoclsnrh .gt_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  margin: 10px;
+  border-top-style: solid;
+  border-top-width: 1px;
+  border-top-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  overflow-x: hidden;
+}
+
+#smxoclsnrh .gt_stub {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#smxoclsnrh .gt_stub_row_group {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+  vertical-align: top;
+}
+
+#smxoclsnrh .gt_row_group_first td {
+  border-top-width: 2px;
+}
+
+#smxoclsnrh .gt_row_group_first th {
+  border-top-width: 2px;
+}
+
+#smxoclsnrh .gt_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#smxoclsnrh .gt_first_summary_row {
+  border-top-style: solid;
+  border-top-color: #D3D3D3;
+}
+
+#smxoclsnrh .gt_first_summary_row.thick {
+  border-top-width: 2px;
+}
+
+#smxoclsnrh .gt_last_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#smxoclsnrh .gt_grand_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#smxoclsnrh .gt_first_grand_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-style: double;
+  border-top-width: 6px;
+  border-top-color: #D3D3D3;
+}
+
+#smxoclsnrh .gt_last_grand_summary_row_top {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: double;
+  border-bottom-width: 6px;
+  border-bottom-color: #D3D3D3;
+}
+
+#smxoclsnrh .gt_striped {
+  background-color: rgba(128, 128, 128, 0.05);
+}
+
+#smxoclsnrh .gt_table_body {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#smxoclsnrh .gt_footnotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#smxoclsnrh .gt_footnote {
+  margin: 0px;
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#smxoclsnrh .gt_sourcenotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#smxoclsnrh .gt_sourcenote {
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#smxoclsnrh .gt_left {
+  text-align: left;
+}
+
+#smxoclsnrh .gt_center {
+  text-align: center;
+}
+
+#smxoclsnrh .gt_right {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+#smxoclsnrh .gt_font_normal {
+  font-weight: normal;
+}
+
+#smxoclsnrh .gt_font_bold {
+  font-weight: bold;
+}
+
+#smxoclsnrh .gt_font_italic {
+  font-style: italic;
+}
+
+#smxoclsnrh .gt_super {
+  font-size: 65%;
+}
+
+#smxoclsnrh .gt_footnote_marks {
+  font-size: 75%;
+  vertical-align: 0.4em;
+  position: initial;
+}
+
+#smxoclsnrh .gt_asterisk {
+  font-size: 100%;
+  vertical-align: 0;
+}
+
+#smxoclsnrh .gt_indent_1 {
+  text-indent: 5px;
+}
+
+#smxoclsnrh .gt_indent_2 {
+  text-indent: 10px;
+}
+
+#smxoclsnrh .gt_indent_3 {
+  text-indent: 15px;
+}
+
+#smxoclsnrh .gt_indent_4 {
+  text-indent: 20px;
+}
+
+#smxoclsnrh .gt_indent_5 {
+  text-indent: 25px;
+}
+
+#smxoclsnrh .katex-display {
+  display: inline-flex !important;
+  margin-bottom: 0.75em !important;
+}
+
+#smxoclsnrh div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
+  height: 0px !important;
+}
+</style>
+
+<table class="gt_table caption-top table table-sm table-striped small" data-quarto-bootstrap="false">
+<thead>
+<tr class="gt_heading header">
+<td colspan="8" class="gt_heading gt_title gt_font_normal gt_bottom_border">Practice Level Data</td>
+</tr>
+<tr class="gt_col_headings even">
+<th id="practice_id" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">Prac ID</th>
+<th id="n_providers" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col"># Providers</th>
+<th id="n_medicare_pt" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col"># Medicare Pts</th>
+<th id="n_medicaid_pt" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col"># Medicaid Pts</th>
+<th id="n_private_pt" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col"># Private Pts</th>
+<th id="n_pt" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col"># Patients</th>
+<th id="has_intervention" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">Case Mgmt<span class="gt_footnote_marks" style="white-space:nowrap;font-style:italic;font-weight:normal;line-height:0;"><sup>1</sup></span></th>
+<th id="intervention_start" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">Case Mgmt Start<span class="gt_footnote_marks" style="white-space:nowrap;font-style:italic;font-weight:normal;line-height:0;"><sup>2</sup></span></th>
+</tr>
+</thead>
+<tbody class="gt_table_body">
+<tr class="odd">
+<td class="gt_row gt_right" headers="practice_id">1</td>
+<td class="gt_row gt_right" headers="n_providers">5</td>
+<td class="gt_row gt_right" headers="n_medicare_pt">3,180</td>
+<td class="gt_row gt_right" headers="n_medicaid_pt">523</td>
+<td class="gt_row gt_right" headers="n_private_pt">1,538</td>
+<td class="gt_row gt_right" headers="n_pt">5,241</td>
+<td class="gt_row gt_right" headers="has_intervention">1</td>
+<td class="gt_row gt_right" headers="intervention_start">2023-06-01</td>
+</tr>
+<tr class="even">
+<td class="gt_row gt_right" headers="practice_id">2</td>
+<td class="gt_row gt_right" headers="n_providers">6</td>
+<td class="gt_row gt_right" headers="n_medicare_pt">2,253</td>
+<td class="gt_row gt_right" headers="n_medicaid_pt">236</td>
+<td class="gt_row gt_right" headers="n_private_pt">5,599</td>
+<td class="gt_row gt_right" headers="n_pt">8,088</td>
+<td class="gt_row gt_right" headers="has_intervention">1</td>
+<td class="gt_row gt_right" headers="intervention_start">2023-06-01</td>
+</tr>
+<tr class="odd">
+<td class="gt_row gt_right" headers="practice_id">3</td>
+<td class="gt_row gt_right" headers="n_providers">2</td>
+<td class="gt_row gt_right" headers="n_medicare_pt">974</td>
+<td class="gt_row gt_right" headers="n_medicaid_pt">197</td>
+<td class="gt_row gt_right" headers="n_private_pt">1,774</td>
+<td class="gt_row gt_right" headers="n_pt">2,945</td>
+<td class="gt_row gt_right" headers="has_intervention">1</td>
+<td class="gt_row gt_right" headers="intervention_start">2023-09-01</td>
+</tr>
+<tr class="even">
+<td class="gt_row gt_right" headers="practice_id">4</td>
+<td class="gt_row gt_right" headers="n_providers">5</td>
+<td class="gt_row gt_right" headers="n_medicare_pt">709</td>
+<td class="gt_row gt_right" headers="n_medicaid_pt">974</td>
+<td class="gt_row gt_right" headers="n_private_pt">7,942</td>
+<td class="gt_row gt_right" headers="n_pt">9,625</td>
+<td class="gt_row gt_right" headers="has_intervention">0</td>
+<td class="gt_row gt_right" headers="intervention_start">NA</td>
+</tr>
+<tr class="odd">
+<td class="gt_row gt_right" headers="practice_id">5</td>
+<td class="gt_row gt_right" headers="n_providers">3</td>
+<td class="gt_row gt_right" headers="n_medicare_pt">1,284</td>
+<td class="gt_row gt_right" headers="n_medicaid_pt">462</td>
+<td class="gt_row gt_right" headers="n_private_pt">2,635</td>
+<td class="gt_row gt_right" headers="n_pt">4,381</td>
+<td class="gt_row gt_right" headers="has_intervention">1</td>
+<td class="gt_row gt_right" headers="intervention_start">2025-10-01</td>
+</tr>
+<tr class="even">
+<td class="gt_row gt_right" headers="practice_id">6</td>
+<td class="gt_row gt_right" headers="n_providers">3</td>
+<td class="gt_row gt_right" headers="n_medicare_pt">412</td>
+<td class="gt_row gt_right" headers="n_medicaid_pt">347</td>
+<td class="gt_row gt_right" headers="n_private_pt">4,840</td>
+<td class="gt_row gt_right" headers="n_pt">5,599</td>
+<td class="gt_row gt_right" headers="has_intervention">1</td>
+<td class="gt_row gt_right" headers="intervention_start">2024-11-01</td>
+</tr>
+<tr class="odd">
+<td class="gt_row gt_right" headers="practice_id">7</td>
+<td class="gt_row gt_right" headers="n_providers">4</td>
+<td class="gt_row gt_right" headers="n_medicare_pt">1,357</td>
+<td class="gt_row gt_right" headers="n_medicaid_pt">204</td>
+<td class="gt_row gt_right" headers="n_private_pt">6,135</td>
+<td class="gt_row gt_right" headers="n_pt">7,696</td>
+<td class="gt_row gt_right" headers="has_intervention">1</td>
+<td class="gt_row gt_right" headers="intervention_start">2025-08-01</td>
+</tr>
+<tr class="even">
+<td class="gt_row gt_right" headers="practice_id">8</td>
+<td class="gt_row gt_right" headers="n_providers">1</td>
+<td class="gt_row gt_right" headers="n_medicare_pt">202</td>
+<td class="gt_row gt_right" headers="n_medicaid_pt">18</td>
+<td class="gt_row gt_right" headers="n_private_pt">1,410</td>
+<td class="gt_row gt_right" headers="n_pt">1,630</td>
+<td class="gt_row gt_right" headers="has_intervention">0</td>
+<td class="gt_row gt_right" headers="intervention_start">NA</td>
+</tr>
+</tbody><tfoot>
+<tr class="gt_footnotes odd">
+<td colspan="8" class="gt_footnote"><span class="gt_footnote_marks" style="white-space:nowrap;font-style:italic;font-weight:normal;line-height:0;"><sup>1</sup></span> This is the treatment variable</td>
+</tr>
+<tr class="gt_footnotes even">
+<td colspan="8" class="gt_footnote"><span class="gt_footnote_marks" style="white-space:nowrap;font-style:italic;font-weight:normal;line-height:0;"><sup>2</sup></span> The intervention start date varies by practice between '2023-01-01' and '2025-11-01'</td>
+</tr>
+</tfoot>
+
+</table>
+
+</div>
+</div>
+</div>
+</section>
+<section id="patient-data" class="level2">
+<h2 class="anchored" data-anchor-id="patient-data">Patient Data</h2>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>pat <span class="sc">%&gt;%</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">group_by</span>(insurance, esrd, ssdi) <span class="sc">%&gt;%</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">sample_n</span>(<span class="dv">2</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ungroup</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">gt</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">tab_header</span>(<span class="st">"Simulated Patient Level Data"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">cols_label</span>(</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>        <span class="at">practice_id =</span> <span class="st">"Prac ID"</span>,</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>        <span class="at">patient_id =</span> <span class="st">"Patient ID"</span>,</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>        <span class="at">insurance =</span> <span class="st">"Insurance"</span>,</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>        <span class="at">age =</span> <span class="st">"Age"</span>,</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>        <span class="at">sex =</span> <span class="st">"Sex"</span>,</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>        <span class="at">esrd =</span> <span class="st">"ESRD"</span>,</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>        <span class="at">ssdi =</span> <span class="st">"SSDI"</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>    ) <span class="sc">%&gt;%</span> </span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">tab_footnote</span>(<span class="st">"Patient ID is nested within Practice ID"</span>, <span class="fu">cells_column_labels</span>(patient_id))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<div id="qfmsqehail" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>#qfmsqehail table {
+  font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#qfmsqehail thead, #qfmsqehail tbody, #qfmsqehail tfoot, #qfmsqehail tr, #qfmsqehail td, #qfmsqehail th {
+  border-style: none;
+}
+
+#qfmsqehail p {
+  margin: 0;
+  padding: 0;
+}
+
+#qfmsqehail .gt_table {
+  display: table;
+  border-collapse: collapse;
+  line-height: normal;
+  margin-left: auto;
+  margin-right: auto;
+  color: #333333;
+  font-size: 16px;
+  font-weight: normal;
+  font-style: normal;
+  background-color: #FFFFFF;
+  width: auto;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #A8A8A8;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #A8A8A8;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+}
+
+#qfmsqehail .gt_caption {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+#qfmsqehail .gt_title {
+  color: #333333;
+  font-size: 125%;
+  font-weight: initial;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-color: #FFFFFF;
+  border-bottom-width: 0;
+}
+
+#qfmsqehail .gt_subtitle {
+  color: #333333;
+  font-size: 85%;
+  font-weight: initial;
+  padding-top: 3px;
+  padding-bottom: 5px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-color: #FFFFFF;
+  border-top-width: 0;
+}
+
+#qfmsqehail .gt_heading {
+  background-color: #FFFFFF;
+  text-align: center;
+  border-bottom-color: #FFFFFF;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#qfmsqehail .gt_bottom_border {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#qfmsqehail .gt_col_headings {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#qfmsqehail .gt_col_heading {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 6px;
+  padding-left: 5px;
+  padding-right: 5px;
+  overflow-x: hidden;
+}
+
+#qfmsqehail .gt_column_spanner_outer {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+#qfmsqehail .gt_column_spanner_outer:first-child {
+  padding-left: 0;
+}
+
+#qfmsqehail .gt_column_spanner_outer:last-child {
+  padding-right: 0;
+}
+
+#qfmsqehail .gt_column_spanner {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  overflow-x: hidden;
+  display: inline-block;
+  width: 100%;
+}
+
+#qfmsqehail .gt_spanner_row {
+  border-bottom-style: hidden;
+}
+
+#qfmsqehail .gt_group_heading {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  text-align: left;
+}
+
+#qfmsqehail .gt_empty_group_heading {
+  padding: 0.5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: middle;
+}
+
+#qfmsqehail .gt_from_md > :first-child {
+  margin-top: 0;
+}
+
+#qfmsqehail .gt_from_md > :last-child {
+  margin-bottom: 0;
+}
+
+#qfmsqehail .gt_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  margin: 10px;
+  border-top-style: solid;
+  border-top-width: 1px;
+  border-top-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  overflow-x: hidden;
+}
+
+#qfmsqehail .gt_stub {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#qfmsqehail .gt_stub_row_group {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+  vertical-align: top;
+}
+
+#qfmsqehail .gt_row_group_first td {
+  border-top-width: 2px;
+}
+
+#qfmsqehail .gt_row_group_first th {
+  border-top-width: 2px;
+}
+
+#qfmsqehail .gt_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#qfmsqehail .gt_first_summary_row {
+  border-top-style: solid;
+  border-top-color: #D3D3D3;
+}
+
+#qfmsqehail .gt_first_summary_row.thick {
+  border-top-width: 2px;
+}
+
+#qfmsqehail .gt_last_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#qfmsqehail .gt_grand_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#qfmsqehail .gt_first_grand_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-style: double;
+  border-top-width: 6px;
+  border-top-color: #D3D3D3;
+}
+
+#qfmsqehail .gt_last_grand_summary_row_top {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: double;
+  border-bottom-width: 6px;
+  border-bottom-color: #D3D3D3;
+}
+
+#qfmsqehail .gt_striped {
+  background-color: rgba(128, 128, 128, 0.05);
+}
+
+#qfmsqehail .gt_table_body {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#qfmsqehail .gt_footnotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#qfmsqehail .gt_footnote {
+  margin: 0px;
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#qfmsqehail .gt_sourcenotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#qfmsqehail .gt_sourcenote {
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#qfmsqehail .gt_left {
+  text-align: left;
+}
+
+#qfmsqehail .gt_center {
+  text-align: center;
+}
+
+#qfmsqehail .gt_right {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+#qfmsqehail .gt_font_normal {
+  font-weight: normal;
+}
+
+#qfmsqehail .gt_font_bold {
+  font-weight: bold;
+}
+
+#qfmsqehail .gt_font_italic {
+  font-style: italic;
+}
+
+#qfmsqehail .gt_super {
+  font-size: 65%;
+}
+
+#qfmsqehail .gt_footnote_marks {
+  font-size: 75%;
+  vertical-align: 0.4em;
+  position: initial;
+}
+
+#qfmsqehail .gt_asterisk {
+  font-size: 100%;
+  vertical-align: 0;
+}
+
+#qfmsqehail .gt_indent_1 {
+  text-indent: 5px;
+}
+
+#qfmsqehail .gt_indent_2 {
+  text-indent: 10px;
+}
+
+#qfmsqehail .gt_indent_3 {
+  text-indent: 15px;
+}
+
+#qfmsqehail .gt_indent_4 {
+  text-indent: 20px;
+}
+
+#qfmsqehail .gt_indent_5 {
+  text-indent: 25px;
+}
+
+#qfmsqehail .katex-display {
+  display: inline-flex !important;
+  margin-bottom: 0.75em !important;
+}
+
+#qfmsqehail div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
+  height: 0px !important;
+}
+</style>
+
+<table class="gt_table caption-top table table-sm table-striped small" data-quarto-bootstrap="false">
+<thead>
+<tr class="gt_heading header">
+<td colspan="7" class="gt_heading gt_title gt_font_normal gt_bottom_border">Simulated Patient Level Data</td>
+</tr>
+<tr class="gt_col_headings even">
+<th id="practice_id" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">Prac ID</th>
+<th id="patient_id" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">Patient ID<span class="gt_footnote_marks" style="white-space:nowrap;font-style:italic;font-weight:normal;line-height:0;"><sup>1</sup></span></th>
+<th id="insurance" class="gt_col_heading gt_columns_bottom_border gt_left" data-quarto-table-cell-role="th" scope="col">Insurance</th>
+<th id="age" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">Age</th>
+<th id="sex" class="gt_col_heading gt_columns_bottom_border gt_left" data-quarto-table-cell-role="th" scope="col">Sex</th>
+<th id="esrd" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">ESRD</th>
+<th id="ssdi" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">SSDI</th>
+</tr>
+</thead>
+<tbody class="gt_table_body">
+<tr class="odd">
+<td class="gt_row gt_right" headers="practice_id">39</td>
+<td class="gt_row gt_right" headers="patient_id">2972</td>
+<td class="gt_row gt_left" headers="insurance">medicaid</td>
+<td class="gt_row gt_right" headers="age">56</td>
+<td class="gt_row gt_left" headers="sex">F</td>
+<td class="gt_row gt_right" headers="esrd">0</td>
+<td class="gt_row gt_right" headers="ssdi">0</td>
+</tr>
+<tr class="even">
+<td class="gt_row gt_right" headers="practice_id">45</td>
+<td class="gt_row gt_right" headers="patient_id">721</td>
+<td class="gt_row gt_left" headers="insurance">medicaid</td>
+<td class="gt_row gt_right" headers="age">16</td>
+<td class="gt_row gt_left" headers="sex">M</td>
+<td class="gt_row gt_right" headers="esrd">0</td>
+<td class="gt_row gt_right" headers="ssdi">0</td>
+</tr>
+<tr class="odd">
+<td class="gt_row gt_right" headers="practice_id">1</td>
+<td class="gt_row gt_right" headers="patient_id">2282</td>
+<td class="gt_row gt_left" headers="insurance">medicare</td>
+<td class="gt_row gt_right" headers="age">68</td>
+<td class="gt_row gt_left" headers="sex">F</td>
+<td class="gt_row gt_right" headers="esrd">0</td>
+<td class="gt_row gt_right" headers="ssdi">0</td>
+</tr>
+<tr class="even">
+<td class="gt_row gt_right" headers="practice_id">17</td>
+<td class="gt_row gt_right" headers="patient_id">446</td>
+<td class="gt_row gt_left" headers="insurance">medicare</td>
+<td class="gt_row gt_right" headers="age">74</td>
+<td class="gt_row gt_left" headers="sex">M</td>
+<td class="gt_row gt_right" headers="esrd">0</td>
+<td class="gt_row gt_right" headers="ssdi">0</td>
+</tr>
+<tr class="odd">
+<td class="gt_row gt_right" headers="practice_id">43</td>
+<td class="gt_row gt_right" headers="patient_id">190</td>
+<td class="gt_row gt_left" headers="insurance">medicare</td>
+<td class="gt_row gt_right" headers="age">31</td>
+<td class="gt_row gt_left" headers="sex">F</td>
+<td class="gt_row gt_right" headers="esrd">0</td>
+<td class="gt_row gt_right" headers="ssdi">1</td>
+</tr>
+<tr class="even">
+<td class="gt_row gt_right" headers="practice_id">59</td>
+<td class="gt_row gt_right" headers="patient_id">344</td>
+<td class="gt_row gt_left" headers="insurance">medicare</td>
+<td class="gt_row gt_right" headers="age">63</td>
+<td class="gt_row gt_left" headers="sex">F</td>
+<td class="gt_row gt_right" headers="esrd">0</td>
+<td class="gt_row gt_right" headers="ssdi">1</td>
+</tr>
+<tr class="odd">
+<td class="gt_row gt_right" headers="practice_id">60</td>
+<td class="gt_row gt_right" headers="patient_id">1767</td>
+<td class="gt_row gt_left" headers="insurance">medicare</td>
+<td class="gt_row gt_right" headers="age">75</td>
+<td class="gt_row gt_left" headers="sex">F</td>
+<td class="gt_row gt_right" headers="esrd">1</td>
+<td class="gt_row gt_right" headers="ssdi">0</td>
+</tr>
+<tr class="even">
+<td class="gt_row gt_right" headers="practice_id">65</td>
+<td class="gt_row gt_right" headers="patient_id">991</td>
+<td class="gt_row gt_left" headers="insurance">medicare</td>
+<td class="gt_row gt_right" headers="age">74</td>
+<td class="gt_row gt_left" headers="sex">M</td>
+<td class="gt_row gt_right" headers="esrd">1</td>
+<td class="gt_row gt_right" headers="ssdi">0</td>
+</tr>
+<tr class="odd">
+<td class="gt_row gt_right" headers="practice_id">36</td>
+<td class="gt_row gt_right" headers="patient_id">2467</td>
+<td class="gt_row gt_left" headers="insurance">private</td>
+<td class="gt_row gt_right" headers="age">32</td>
+<td class="gt_row gt_left" headers="sex">M</td>
+<td class="gt_row gt_right" headers="esrd">0</td>
+<td class="gt_row gt_right" headers="ssdi">0</td>
+</tr>
+<tr class="even">
+<td class="gt_row gt_right" headers="practice_id">54</td>
+<td class="gt_row gt_right" headers="patient_id">2897</td>
+<td class="gt_row gt_left" headers="insurance">private</td>
+<td class="gt_row gt_right" headers="age">58</td>
+<td class="gt_row gt_left" headers="sex">M</td>
+<td class="gt_row gt_right" headers="esrd">0</td>
+<td class="gt_row gt_right" headers="ssdi">0</td>
+</tr>
+</tbody><tfoot>
+<tr class="gt_footnotes odd">
+<td colspan="7" class="gt_footnote"><span class="gt_footnote_marks" style="white-space:nowrap;font-style:italic;font-weight:normal;line-height:0;"><sup>1</sup></span> Patient ID is nested within Practice ID</td>
+</tr>
+</tfoot>
+
+</table>
+
+</div>
+</div>
+</div>
+</section>
+<section id="hospitalization-and-readmission-data" class="level2">
+<h2 class="anchored" data-anchor-id="hospitalization-and-readmission-data">Hospitalization and Readmission Data</h2>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>hosp <span class="sc">%&gt;%</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">slice</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">gt</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">tab_header</span>(<span class="st">"Simulated Hospitalization Level Data"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">cols_label</span>(</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>        <span class="at">practice_id =</span> <span class="st">"Prac ID"</span>,</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>        <span class="at">patient_id =</span> <span class="st">"Patient ID"</span>,</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>        <span class="at">hosp_date =</span> <span class="st">"Hospitalization Date"</span>,</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>        <span class="at">readmit =</span> <span class="st">"Readmission"</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>    ) <span class="sc">%&gt;%</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">tab_footnote</span>(<span class="st">"Outcome of Interest: All-cause readmission within 30 days of discharge"</span>, <span class="fu">cells_column_labels</span>(readmit)) <span class="sc">%&gt;%</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">tab_footnote</span>(<span class="st">"Two patients hospitalized on the same day may have different values for the treatment of interest (received post-discharge care management)"</span>,</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">cells_column_labels</span>(hosp_date))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<div id="lbqhdqsasx" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>#lbqhdqsasx table {
+  font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#lbqhdqsasx thead, #lbqhdqsasx tbody, #lbqhdqsasx tfoot, #lbqhdqsasx tr, #lbqhdqsasx td, #lbqhdqsasx th {
+  border-style: none;
+}
+
+#lbqhdqsasx p {
+  margin: 0;
+  padding: 0;
+}
+
+#lbqhdqsasx .gt_table {
+  display: table;
+  border-collapse: collapse;
+  line-height: normal;
+  margin-left: auto;
+  margin-right: auto;
+  color: #333333;
+  font-size: 16px;
+  font-weight: normal;
+  font-style: normal;
+  background-color: #FFFFFF;
+  width: auto;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #A8A8A8;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #A8A8A8;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+}
+
+#lbqhdqsasx .gt_caption {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+#lbqhdqsasx .gt_title {
+  color: #333333;
+  font-size: 125%;
+  font-weight: initial;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-color: #FFFFFF;
+  border-bottom-width: 0;
+}
+
+#lbqhdqsasx .gt_subtitle {
+  color: #333333;
+  font-size: 85%;
+  font-weight: initial;
+  padding-top: 3px;
+  padding-bottom: 5px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-color: #FFFFFF;
+  border-top-width: 0;
+}
+
+#lbqhdqsasx .gt_heading {
+  background-color: #FFFFFF;
+  text-align: center;
+  border-bottom-color: #FFFFFF;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#lbqhdqsasx .gt_bottom_border {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#lbqhdqsasx .gt_col_headings {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#lbqhdqsasx .gt_col_heading {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 6px;
+  padding-left: 5px;
+  padding-right: 5px;
+  overflow-x: hidden;
+}
+
+#lbqhdqsasx .gt_column_spanner_outer {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+#lbqhdqsasx .gt_column_spanner_outer:first-child {
+  padding-left: 0;
+}
+
+#lbqhdqsasx .gt_column_spanner_outer:last-child {
+  padding-right: 0;
+}
+
+#lbqhdqsasx .gt_column_spanner {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  overflow-x: hidden;
+  display: inline-block;
+  width: 100%;
+}
+
+#lbqhdqsasx .gt_spanner_row {
+  border-bottom-style: hidden;
+}
+
+#lbqhdqsasx .gt_group_heading {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  text-align: left;
+}
+
+#lbqhdqsasx .gt_empty_group_heading {
+  padding: 0.5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: middle;
+}
+
+#lbqhdqsasx .gt_from_md > :first-child {
+  margin-top: 0;
+}
+
+#lbqhdqsasx .gt_from_md > :last-child {
+  margin-bottom: 0;
+}
+
+#lbqhdqsasx .gt_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  margin: 10px;
+  border-top-style: solid;
+  border-top-width: 1px;
+  border-top-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  overflow-x: hidden;
+}
+
+#lbqhdqsasx .gt_stub {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#lbqhdqsasx .gt_stub_row_group {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+  vertical-align: top;
+}
+
+#lbqhdqsasx .gt_row_group_first td {
+  border-top-width: 2px;
+}
+
+#lbqhdqsasx .gt_row_group_first th {
+  border-top-width: 2px;
+}
+
+#lbqhdqsasx .gt_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#lbqhdqsasx .gt_first_summary_row {
+  border-top-style: solid;
+  border-top-color: #D3D3D3;
+}
+
+#lbqhdqsasx .gt_first_summary_row.thick {
+  border-top-width: 2px;
+}
+
+#lbqhdqsasx .gt_last_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#lbqhdqsasx .gt_grand_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#lbqhdqsasx .gt_first_grand_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-style: double;
+  border-top-width: 6px;
+  border-top-color: #D3D3D3;
+}
+
+#lbqhdqsasx .gt_last_grand_summary_row_top {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: double;
+  border-bottom-width: 6px;
+  border-bottom-color: #D3D3D3;
+}
+
+#lbqhdqsasx .gt_striped {
+  background-color: rgba(128, 128, 128, 0.05);
+}
+
+#lbqhdqsasx .gt_table_body {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#lbqhdqsasx .gt_footnotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#lbqhdqsasx .gt_footnote {
+  margin: 0px;
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#lbqhdqsasx .gt_sourcenotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#lbqhdqsasx .gt_sourcenote {
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#lbqhdqsasx .gt_left {
+  text-align: left;
+}
+
+#lbqhdqsasx .gt_center {
+  text-align: center;
+}
+
+#lbqhdqsasx .gt_right {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+#lbqhdqsasx .gt_font_normal {
+  font-weight: normal;
+}
+
+#lbqhdqsasx .gt_font_bold {
+  font-weight: bold;
+}
+
+#lbqhdqsasx .gt_font_italic {
+  font-style: italic;
+}
+
+#lbqhdqsasx .gt_super {
+  font-size: 65%;
+}
+
+#lbqhdqsasx .gt_footnote_marks {
+  font-size: 75%;
+  vertical-align: 0.4em;
+  position: initial;
+}
+
+#lbqhdqsasx .gt_asterisk {
+  font-size: 100%;
+  vertical-align: 0;
+}
+
+#lbqhdqsasx .gt_indent_1 {
+  text-indent: 5px;
+}
+
+#lbqhdqsasx .gt_indent_2 {
+  text-indent: 10px;
+}
+
+#lbqhdqsasx .gt_indent_3 {
+  text-indent: 15px;
+}
+
+#lbqhdqsasx .gt_indent_4 {
+  text-indent: 20px;
+}
+
+#lbqhdqsasx .gt_indent_5 {
+  text-indent: 25px;
+}
+
+#lbqhdqsasx .katex-display {
+  display: inline-flex !important;
+  margin-bottom: 0.75em !important;
+}
+
+#lbqhdqsasx div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
+  height: 0px !important;
+}
+</style>
+
+<table class="gt_table caption-top table table-sm table-striped small" data-quarto-bootstrap="false">
+<thead>
+<tr class="gt_heading header">
+<td colspan="4" class="gt_heading gt_title gt_font_normal gt_bottom_border">Simulated Hospitalization Level Data</td>
+</tr>
+<tr class="gt_col_headings even">
+<th id="practice_id" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">Prac ID</th>
+<th id="patient_id" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">Patient ID</th>
+<th id="hosp_date" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">Hospitalization Date<span class="gt_footnote_marks" style="white-space:nowrap;font-style:italic;font-weight:normal;line-height:0;"><sup>1</sup></span></th>
+<th id="readmit" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">Readmission<span class="gt_footnote_marks" style="white-space:nowrap;font-style:italic;font-weight:normal;line-height:0;"><sup>2</sup></span></th>
+</tr>
+</thead>
+<tbody class="gt_table_body">
+<tr class="odd">
+<td class="gt_row gt_right" headers="practice_id">1</td>
+<td class="gt_row gt_right" headers="patient_id">17</td>
+<td class="gt_row gt_right" headers="hosp_date">2024-07-01</td>
+<td class="gt_row gt_right" headers="readmit">0</td>
+</tr>
+<tr class="even">
+<td class="gt_row gt_right" headers="practice_id">1</td>
+<td class="gt_row gt_right" headers="patient_id">18</td>
+<td class="gt_row gt_right" headers="hosp_date">2023-05-01</td>
+<td class="gt_row gt_right" headers="readmit">0</td>
+</tr>
+<tr class="odd">
+<td class="gt_row gt_right" headers="practice_id">1</td>
+<td class="gt_row gt_right" headers="patient_id">38</td>
+<td class="gt_row gt_right" headers="hosp_date">2022-09-01</td>
+<td class="gt_row gt_right" headers="readmit">0</td>
+</tr>
+<tr class="even">
+<td class="gt_row gt_right" headers="practice_id">1</td>
+<td class="gt_row gt_right" headers="patient_id">104</td>
+<td class="gt_row gt_right" headers="hosp_date">2022-04-01</td>
+<td class="gt_row gt_right" headers="readmit">1</td>
+</tr>
+<tr class="odd">
+<td class="gt_row gt_right" headers="practice_id">1</td>
+<td class="gt_row gt_right" headers="patient_id">114</td>
+<td class="gt_row gt_right" headers="hosp_date">2023-06-01</td>
+<td class="gt_row gt_right" headers="readmit">0</td>
+</tr>
+<tr class="even">
+<td class="gt_row gt_right" headers="practice_id">1</td>
+<td class="gt_row gt_right" headers="patient_id">125</td>
+<td class="gt_row gt_right" headers="hosp_date">2022-02-01</td>
+<td class="gt_row gt_right" headers="readmit">0</td>
+</tr>
+<tr class="odd">
+<td class="gt_row gt_right" headers="practice_id">1</td>
+<td class="gt_row gt_right" headers="patient_id">131</td>
+<td class="gt_row gt_right" headers="hosp_date">2025-01-01</td>
+<td class="gt_row gt_right" headers="readmit">0</td>
+</tr>
+<tr class="even">
+<td class="gt_row gt_right" headers="practice_id">1</td>
+<td class="gt_row gt_right" headers="patient_id">138</td>
+<td class="gt_row gt_right" headers="hosp_date">2023-05-01</td>
+<td class="gt_row gt_right" headers="readmit">0</td>
+</tr>
+<tr class="odd">
+<td class="gt_row gt_right" headers="practice_id">1</td>
+<td class="gt_row gt_right" headers="patient_id">155</td>
+<td class="gt_row gt_right" headers="hosp_date">2025-06-01</td>
+<td class="gt_row gt_right" headers="readmit">0</td>
+</tr>
+<tr class="even">
+<td class="gt_row gt_right" headers="practice_id">1</td>
+<td class="gt_row gt_right" headers="patient_id">159</td>
+<td class="gt_row gt_right" headers="hosp_date">2023-09-01</td>
+<td class="gt_row gt_right" headers="readmit">1</td>
+</tr>
+</tbody><tfoot>
+<tr class="gt_footnotes odd">
+<td colspan="4" class="gt_footnote"><span class="gt_footnote_marks" style="white-space:nowrap;font-style:italic;font-weight:normal;line-height:0;"><sup>1</sup></span> Two patients hospitalized on the same day may have different values for the treatment of interest (received post-discharge care management)</td>
+</tr>
+<tr class="gt_footnotes even">
+<td colspan="4" class="gt_footnote"><span class="gt_footnote_marks" style="white-space:nowrap;font-style:italic;font-weight:normal;line-height:0;"><sup>2</sup></span> Outcome of Interest: All-cause readmission within 30 days of discharge</td>
+</tr>
+</tfoot>
+
+</table>
+
+</div>
+</div>
+</div>
+</section>
+<section id="other-data-issues-not-considered" class="level2">
+<h2 class="anchored" data-anchor-id="other-data-issues-not-considered">Other data issues not considered</h2>
+<ul>
+<li>ESRD</li>
+<li>other comborbidities</li>
+<li>patient attribution</li>
+<li>Dual eligibility</li>
+<li>Other coviarates</li>
+<li>Lags in implementation of intervention</li>
+<li>Multiple hospitalizations and readmissions</li>
+</ul>
+</section>
+<section id="compute-patient-outcome" class="level2">
+<h2 class="anchored" data-anchor-id="compute-patient-outcome">Compute Patient Outcome</h2>
+<p>Unfold this ‘Code’ to see the code for joining the three tables together and computing the binary treatment indicator for care-management.</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>patient_outcome <span class="ot">&lt;-</span> pat <span class="sc">%&gt;%</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(prac, <span class="at">by =</span> <span class="st">"practice_id"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(hosp, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"practice_id"</span>, <span class="st">"patient_id"</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">has_intervention_pt =</span> <span class="fu">case_when</span>(</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>      has_intervention <span class="sc">==</span> <span class="dv">0</span> <span class="sc">~</span> <span class="dv">0</span>,</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>      <span class="co"># if the patient is hospitalized before the practice adopts care managment,</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>      <span class="co"># the patient has a 0 for treatment even if the practice subsequently adopts care management</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>      intervention_start <span class="sc">&gt;</span> hosp_date <span class="sc">~</span> <span class="dv">0</span>,</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>      <span class="cn">TRUE</span> <span class="sc">~</span> <span class="dv">1</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>    ),</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">hosp_date_days =</span> <span class="fu">as.integer</span>(hosp_date <span class="sc">-</span> <span class="fu">as.Date</span>(<span class="st">"2022-01-01"</span>)),</span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+</section>
+<section id="analysis-dataset" class="level2">
+<h2 class="anchored" data-anchor-id="analysis-dataset">Analysis Dataset</h2>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>patient_outcome <span class="sc">%&gt;%</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">select</span>(practice_id, patient_id, insurance, age, sex, esrd, ssdi, hosp_date, has_intervention_pt, readmit) <span class="sc">%&gt;%</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(hosp_date)) <span class="sc">%&gt;%</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">group_by</span>(readmit) <span class="sc">%&gt;%</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">sample_n</span>(<span class="dv">3</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ungroup</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">gt</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">tab_header</span>(<span class="st">"Analysis Data Set"</span>, <span class="at">subtitle =</span> <span class="st">"One row per patient for patients that have been hospitalized"</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">cols_label</span>(</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>        <span class="at">practice_id =</span> <span class="st">"Prac ID"</span>,</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>        <span class="at">patient_id =</span> <span class="st">"Patient ID"</span>,</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>        <span class="at">insurance =</span> <span class="st">"Insurance"</span>,</span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>        <span class="at">age =</span> <span class="st">"Age"</span>,</span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>        <span class="at">sex =</span> <span class="st">"Sex"</span>,</span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>        <span class="at">esrd =</span> <span class="st">"ESRD"</span>,</span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>        <span class="at">ssdi =</span> <span class="st">"SSDI"</span>,</span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>        <span class="at">hosp_date =</span> <span class="st">"Hospitalization Date"</span>,</span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>        <span class="at">has_intervention_pt =</span> <span class="st">"Case Management"</span>,</span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>        <span class="at">readmit =</span> <span class="st">"Readmission"</span></span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>    ) <span class="sc">%&gt;%</span></span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>    <span class="fu">tab_footnote</span>(<span class="st">"Treatment of Interest"</span>, <span class="fu">cells_column_labels</span>(has_intervention_pt)) <span class="sc">%&gt;%</span></span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>    <span class="fu">tab_footnote</span>(<span class="st">"Outcome of Interest"</span>, <span class="fu">cells_column_labels</span>(readmit))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<div id="toxdfegepq" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>#toxdfegepq table {
+  font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#toxdfegepq thead, #toxdfegepq tbody, #toxdfegepq tfoot, #toxdfegepq tr, #toxdfegepq td, #toxdfegepq th {
+  border-style: none;
+}
+
+#toxdfegepq p {
+  margin: 0;
+  padding: 0;
+}
+
+#toxdfegepq .gt_table {
+  display: table;
+  border-collapse: collapse;
+  line-height: normal;
+  margin-left: auto;
+  margin-right: auto;
+  color: #333333;
+  font-size: 16px;
+  font-weight: normal;
+  font-style: normal;
+  background-color: #FFFFFF;
+  width: auto;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #A8A8A8;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #A8A8A8;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+}
+
+#toxdfegepq .gt_caption {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+#toxdfegepq .gt_title {
+  color: #333333;
+  font-size: 125%;
+  font-weight: initial;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-color: #FFFFFF;
+  border-bottom-width: 0;
+}
+
+#toxdfegepq .gt_subtitle {
+  color: #333333;
+  font-size: 85%;
+  font-weight: initial;
+  padding-top: 3px;
+  padding-bottom: 5px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-color: #FFFFFF;
+  border-top-width: 0;
+}
+
+#toxdfegepq .gt_heading {
+  background-color: #FFFFFF;
+  text-align: center;
+  border-bottom-color: #FFFFFF;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#toxdfegepq .gt_bottom_border {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#toxdfegepq .gt_col_headings {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#toxdfegepq .gt_col_heading {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 6px;
+  padding-left: 5px;
+  padding-right: 5px;
+  overflow-x: hidden;
+}
+
+#toxdfegepq .gt_column_spanner_outer {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+#toxdfegepq .gt_column_spanner_outer:first-child {
+  padding-left: 0;
+}
+
+#toxdfegepq .gt_column_spanner_outer:last-child {
+  padding-right: 0;
+}
+
+#toxdfegepq .gt_column_spanner {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  overflow-x: hidden;
+  display: inline-block;
+  width: 100%;
+}
+
+#toxdfegepq .gt_spanner_row {
+  border-bottom-style: hidden;
+}
+
+#toxdfegepq .gt_group_heading {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  text-align: left;
+}
+
+#toxdfegepq .gt_empty_group_heading {
+  padding: 0.5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: middle;
+}
+
+#toxdfegepq .gt_from_md > :first-child {
+  margin-top: 0;
+}
+
+#toxdfegepq .gt_from_md > :last-child {
+  margin-bottom: 0;
+}
+
+#toxdfegepq .gt_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  margin: 10px;
+  border-top-style: solid;
+  border-top-width: 1px;
+  border-top-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  overflow-x: hidden;
+}
+
+#toxdfegepq .gt_stub {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#toxdfegepq .gt_stub_row_group {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+  vertical-align: top;
+}
+
+#toxdfegepq .gt_row_group_first td {
+  border-top-width: 2px;
+}
+
+#toxdfegepq .gt_row_group_first th {
+  border-top-width: 2px;
+}
+
+#toxdfegepq .gt_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#toxdfegepq .gt_first_summary_row {
+  border-top-style: solid;
+  border-top-color: #D3D3D3;
+}
+
+#toxdfegepq .gt_first_summary_row.thick {
+  border-top-width: 2px;
+}
+
+#toxdfegepq .gt_last_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#toxdfegepq .gt_grand_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#toxdfegepq .gt_first_grand_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-style: double;
+  border-top-width: 6px;
+  border-top-color: #D3D3D3;
+}
+
+#toxdfegepq .gt_last_grand_summary_row_top {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: double;
+  border-bottom-width: 6px;
+  border-bottom-color: #D3D3D3;
+}
+
+#toxdfegepq .gt_striped {
+  background-color: rgba(128, 128, 128, 0.05);
+}
+
+#toxdfegepq .gt_table_body {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#toxdfegepq .gt_footnotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#toxdfegepq .gt_footnote {
+  margin: 0px;
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#toxdfegepq .gt_sourcenotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#toxdfegepq .gt_sourcenote {
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#toxdfegepq .gt_left {
+  text-align: left;
+}
+
+#toxdfegepq .gt_center {
+  text-align: center;
+}
+
+#toxdfegepq .gt_right {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+#toxdfegepq .gt_font_normal {
+  font-weight: normal;
+}
+
+#toxdfegepq .gt_font_bold {
+  font-weight: bold;
+}
+
+#toxdfegepq .gt_font_italic {
+  font-style: italic;
+}
+
+#toxdfegepq .gt_super {
+  font-size: 65%;
+}
+
+#toxdfegepq .gt_footnote_marks {
+  font-size: 75%;
+  vertical-align: 0.4em;
+  position: initial;
+}
+
+#toxdfegepq .gt_asterisk {
+  font-size: 100%;
+  vertical-align: 0;
+}
+
+#toxdfegepq .gt_indent_1 {
+  text-indent: 5px;
+}
+
+#toxdfegepq .gt_indent_2 {
+  text-indent: 10px;
+}
+
+#toxdfegepq .gt_indent_3 {
+  text-indent: 15px;
+}
+
+#toxdfegepq .gt_indent_4 {
+  text-indent: 20px;
+}
+
+#toxdfegepq .gt_indent_5 {
+  text-indent: 25px;
+}
+
+#toxdfegepq .katex-display {
+  display: inline-flex !important;
+  margin-bottom: 0.75em !important;
+}
+
+#toxdfegepq div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
+  height: 0px !important;
+}
+</style>
+
+<table class="gt_table caption-top table table-sm table-striped small" data-quarto-bootstrap="false">
+<thead>
+<tr class="gt_heading header">
+<td colspan="10" class="gt_heading gt_title gt_font_normal">Analysis Data Set</td>
+</tr>
+<tr class="gt_heading even">
+<td colspan="10" class="gt_heading gt_subtitle gt_font_normal gt_bottom_border">One row per patient for patients that have been hospitalized</td>
+</tr>
+<tr class="gt_col_headings header">
+<th id="practice_id" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">Prac ID</th>
+<th id="patient_id" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">Patient ID</th>
+<th id="insurance" class="gt_col_heading gt_columns_bottom_border gt_left" data-quarto-table-cell-role="th" scope="col">Insurance</th>
+<th id="age" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">Age</th>
+<th id="sex" class="gt_col_heading gt_columns_bottom_border gt_left" data-quarto-table-cell-role="th" scope="col">Sex</th>
+<th id="esrd" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">ESRD</th>
+<th id="ssdi" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">SSDI</th>
+<th id="hosp_date" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">Hospitalization Date</th>
+<th id="has_intervention_pt" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">Case Management<span class="gt_footnote_marks" style="white-space:nowrap;font-style:italic;font-weight:normal;line-height:0;"><sup>1</sup></span></th>
+<th id="readmit" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">Readmission<span class="gt_footnote_marks" style="white-space:nowrap;font-style:italic;font-weight:normal;line-height:0;"><sup>2</sup></span></th>
+</tr>
+</thead>
+<tbody class="gt_table_body">
+<tr class="odd">
+<td class="gt_row gt_right" headers="practice_id">51</td>
+<td class="gt_row gt_right" headers="patient_id">2471</td>
+<td class="gt_row gt_left" headers="insurance">private</td>
+<td class="gt_row gt_right" headers="age">34</td>
+<td class="gt_row gt_left" headers="sex">M</td>
+<td class="gt_row gt_right" headers="esrd">0</td>
+<td class="gt_row gt_right" headers="ssdi">0</td>
+<td class="gt_row gt_right" headers="hosp_date">2024-04-01</td>
+<td class="gt_row gt_right" headers="has_intervention_pt">0</td>
+<td class="gt_row gt_right" headers="readmit">0</td>
+</tr>
+<tr class="even">
+<td class="gt_row gt_right" headers="practice_id">21</td>
+<td class="gt_row gt_right" headers="patient_id">5157</td>
+<td class="gt_row gt_left" headers="insurance">private</td>
+<td class="gt_row gt_right" headers="age">60</td>
+<td class="gt_row gt_left" headers="sex">F</td>
+<td class="gt_row gt_right" headers="esrd">0</td>
+<td class="gt_row gt_right" headers="ssdi">0</td>
+<td class="gt_row gt_right" headers="hosp_date">2023-11-01</td>
+<td class="gt_row gt_right" headers="has_intervention_pt">1</td>
+<td class="gt_row gt_right" headers="readmit">0</td>
+</tr>
+<tr class="odd">
+<td class="gt_row gt_right" headers="practice_id">73</td>
+<td class="gt_row gt_right" headers="patient_id">497</td>
+<td class="gt_row gt_left" headers="insurance">medicare</td>
+<td class="gt_row gt_right" headers="age">90</td>
+<td class="gt_row gt_left" headers="sex">M</td>
+<td class="gt_row gt_right" headers="esrd">0</td>
+<td class="gt_row gt_right" headers="ssdi">0</td>
+<td class="gt_row gt_right" headers="hosp_date">2023-11-01</td>
+<td class="gt_row gt_right" headers="has_intervention_pt">0</td>
+<td class="gt_row gt_right" headers="readmit">0</td>
+</tr>
+<tr class="even">
+<td class="gt_row gt_right" headers="practice_id">13</td>
+<td class="gt_row gt_right" headers="patient_id">702</td>
+<td class="gt_row gt_left" headers="insurance">medicare</td>
+<td class="gt_row gt_right" headers="age">73</td>
+<td class="gt_row gt_left" headers="sex">F</td>
+<td class="gt_row gt_right" headers="esrd">0</td>
+<td class="gt_row gt_right" headers="ssdi">0</td>
+<td class="gt_row gt_right" headers="hosp_date">2023-08-01</td>
+<td class="gt_row gt_right" headers="has_intervention_pt">0</td>
+<td class="gt_row gt_right" headers="readmit">1</td>
+</tr>
+<tr class="odd">
+<td class="gt_row gt_right" headers="practice_id">24</td>
+<td class="gt_row gt_right" headers="patient_id">9382</td>
+<td class="gt_row gt_left" headers="insurance">private</td>
+<td class="gt_row gt_right" headers="age">15</td>
+<td class="gt_row gt_left" headers="sex">F</td>
+<td class="gt_row gt_right" headers="esrd">0</td>
+<td class="gt_row gt_right" headers="ssdi">0</td>
+<td class="gt_row gt_right" headers="hosp_date">2023-01-01</td>
+<td class="gt_row gt_right" headers="has_intervention_pt">0</td>
+<td class="gt_row gt_right" headers="readmit">1</td>
+</tr>
+<tr class="even">
+<td class="gt_row gt_right" headers="practice_id">78</td>
+<td class="gt_row gt_right" headers="patient_id">862</td>
+<td class="gt_row gt_left" headers="insurance">medicare</td>
+<td class="gt_row gt_right" headers="age">53</td>
+<td class="gt_row gt_left" headers="sex">M</td>
+<td class="gt_row gt_right" headers="esrd">0</td>
+<td class="gt_row gt_right" headers="ssdi">1</td>
+<td class="gt_row gt_right" headers="hosp_date">2023-05-01</td>
+<td class="gt_row gt_right" headers="has_intervention_pt">0</td>
+<td class="gt_row gt_right" headers="readmit">1</td>
+</tr>
+</tbody><tfoot>
+<tr class="gt_footnotes odd">
+<td colspan="10" class="gt_footnote"><span class="gt_footnote_marks" style="white-space:nowrap;font-style:italic;font-weight:normal;line-height:0;"><sup>1</sup></span> Treatment of Interest</td>
+</tr>
+<tr class="gt_footnotes even">
+<td colspan="10" class="gt_footnote"><span class="gt_footnote_marks" style="white-space:nowrap;font-style:italic;font-weight:normal;line-height:0;"><sup>2</sup></span> Outcome of Interest</td>
+</tr>
+</tfoot>
+
+</table>
+
+</div>
+</div>
+</div>
+</section>
+<section id="exploratory-analysis" class="level2">
+<h2 class="anchored" data-anchor-id="exploratory-analysis">Exploratory Analysis</h2>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># hospitalization rate</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>patient_outcome <span class="sc">%&gt;%</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">count</span>(<span class="at">is_hosp =</span> <span class="sc">!</span><span class="fu">is.na</span>(hosp_date)) <span class="sc">%&gt;%</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">p =</span> n <span class="sc">/</span> <span class="fu">sum</span>(n))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 2 × 3
+  is_hosp      n      p
+  &lt;lgl&gt;    &lt;int&gt;  &lt;dbl&gt;
+1 FALSE   405205 0.964 
+2 TRUE     15139 0.0360</code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># hospitalization rate by insurance</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>patient_outcome <span class="sc">%&gt;%</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">count</span>(insurance, <span class="at">is_hosp =</span> <span class="sc">!</span><span class="fu">is.na</span>(hosp_date)) <span class="sc">%&gt;%</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">group_by</span>(insurance) <span class="sc">%&gt;%</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">p =</span> n <span class="sc">/</span> <span class="fu">sum</span>(n))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 6 × 4
+# Groups:   insurance [3]
+  insurance is_hosp      n      p
+  &lt;chr&gt;     &lt;lgl&gt;    &lt;int&gt;  &lt;dbl&gt;
+1 medicaid  FALSE    31099 0.963 
+2 medicaid  TRUE      1201 0.0372
+3 medicare  FALSE    90745 0.940 
+4 medicare  TRUE      5843 0.0605
+5 private   FALSE   283361 0.972 
+6 private   TRUE      8095 0.0278</code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># readmission rate</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>patient_outcome <span class="sc">%&gt;%</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(hosp_date)) <span class="sc">%&gt;%</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">count</span>(readmit) <span class="sc">%&gt;%</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">p =</span> n <span class="sc">/</span> <span class="fu">sum</span>(n))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 2 × 3
+  readmit     n     p
+    &lt;int&gt; &lt;int&gt; &lt;dbl&gt;
+1       0 13271 0.877
+2       1  1868 0.123</code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># readmission rate by ESRD</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>patient_outcome <span class="sc">%&gt;%</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(hosp_date)) <span class="sc">%&gt;%</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">count</span>(esrd, readmit) <span class="sc">%&gt;%</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">group_by</span>(esrd) <span class="sc">%&gt;%</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">p =</span> n <span class="sc">/</span> <span class="fu">sum</span>(n))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 4 × 4
+# Groups:   esrd [2]
+   esrd readmit     n     p
+  &lt;int&gt;   &lt;int&gt; &lt;int&gt; &lt;dbl&gt;
+1     0       0 12968 0.881
+2     0       1  1746 0.119
+3     1       0   303 0.713
+4     1       1   122 0.287</code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># per practice: medicare mix vs readmit rate</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>medicare_outcome_df <span class="ot">&lt;-</span> patient_outcome <span class="sc">%&gt;%</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">group_by</span>(practice_id) <span class="sc">%&gt;%</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">summarise</span>(</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>        <span class="at">medicare_mix =</span> <span class="fu">sum</span>(insurance <span class="sc">==</span> <span class="st">"medicare"</span>) <span class="sc">/</span> <span class="fu">n</span>(),</span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>        <span class="at">readmit_rate =</span> <span class="fu">sum</span>(readmit[<span class="sc">!</span><span class="fu">is.na</span>(hosp_date)]) <span class="sc">/</span> <span class="fu">sum</span>(<span class="sc">!</span><span class="fu">is.na</span>(hosp_date))</span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(medicare_outcome_df, <span class="fu">aes</span>(<span class="at">x =</span> medicare_mix, <span class="at">y =</span> readmit_rate)) <span class="sc">+</span></span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">alpha =</span> <span class="fl">0.5</span>) <span class="sc">+</span></span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Readmit rate vs Medicare Mix"</span>,</span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="st">"One dot per practice"</span>,</span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"% Patients with Medicare"</span>,</span>
+<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Readmission Rate"</span></span>
+<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb16-17"><a href="#cb16-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">expand_limits</span>(<span class="at">y =</span> <span class="dv">0</span>) <span class="sc">+</span></span>
+<span id="cb16-18"><a href="#cb16-18" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_y_continuous</span>(<span class="at">breaks =</span> <span class="fu">pretty_breaks</span>(<span class="dv">8</span>), <span class="at">label =</span> percent)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="report_files/figure-html/eda-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">lm</span>(readmit_rate <span class="sc">~</span> medicare_mix, <span class="at">data =</span> medicare_outcome_df) <span class="sc">%&gt;%</span> <span class="fu">tidy</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 2 × 5
+  term         estimate std.error statistic  p.value
+  &lt;chr&gt;           &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;
+1 (Intercept)    0.104    0.00551     18.9  7.64e-31
+2 medicare_mix   0.0650   0.0163       4.00 1.45e- 4</code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># readmit vs trend lines</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>patient_outcome <span class="sc">%&gt;%</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(hosp_date)) <span class="sc">%&gt;%</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> hosp_date, <span class="at">y =</span> readmit)) <span class="sc">+</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_jitter</span>(<span class="at">alpha =</span> <span class="fl">0.1</span>, <span class="at">width =</span> <span class="dv">0</span>, <span class="at">height =</span> <span class="fl">0.1</span>) <span class="sc">+</span></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stat_smooth</span>(<span class="at">method =</span> <span class="st">"glm"</span>, <span class="at">method.args =</span> <span class="fu">list</span>(<span class="at">family =</span> binomial), <span class="at">se =</span> <span class="cn">FALSE</span>) <span class="sc">+</span></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_y_continuous</span>(<span class="at">breaks =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">1</span>), <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">"No Readmit"</span>, <span class="st">"Readmit"</span>)) <span class="sc">+</span></span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">labs</span>(</span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>        <span class="at">title =</span> <span class="st">"Rate of Readmissions over time"</span>,</span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>        <span class="at">subtitle =</span> <span class="st">"Baseline trend from logistic model over time"</span>,</span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a>        <span class="at">x =</span> <span class="st">"Hospitalization Date"</span>,</span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a>        <span class="at">y =</span> <span class="cn">NULL</span></span>
+<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a>    )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stderr">
+<pre><code>`geom_smooth()` using formula = 'y ~ x'</code></pre>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="report_files/figure-html/eda-2.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co"># readmit vs case management</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>patient_outcome <span class="sc">%&gt;%</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>        esrd <span class="sc">==</span> <span class="dv">0</span>,</span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>        <span class="sc">!</span><span class="fu">is.na</span>(hosp_date)</span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>    ) <span class="sc">%&gt;%</span></span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">count</span>(has_intervention_pt, readmit) <span class="sc">%&gt;%</span></span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">group_by</span>(has_intervention_pt) <span class="sc">%&gt;%</span></span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">p =</span> n <span class="sc">/</span> <span class="fu">sum</span>(n))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 4 × 4
+# Groups:   has_intervention_pt [2]
+  has_intervention_pt readmit     n      p
+                &lt;dbl&gt;   &lt;int&gt; &lt;int&gt;  &lt;dbl&gt;
+1                   0       0  9054 0.870 
+2                   0       1  1353 0.130 
+3                   1       0  3914 0.909 
+4                   1       1   393 0.0912</code></pre>
+</div>
+</div>
+</section>
+<section id="model" class="level2">
+<h2 class="anchored" data-anchor-id="model">Model</h2>
+</section>
+<section id="glm-model" class="level2">
+<h2 class="anchored" data-anchor-id="glm-model">GLM Model</h2>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">glm</span>(</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>  readmit <span class="sc">~</span> has_intervention_pt <span class="sc">+</span> hosp_date_days <span class="sc">+</span> age <span class="sc">+</span> sex <span class="sc">+</span> ssdi,</span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">family =</span> <span class="fu">binomial</span>(<span class="at">link =</span> <span class="st">"logit"</span>),</span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> patient_outcome <span class="sc">%&gt;%</span> <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(hosp_date), esrd <span class="sc">==</span> <span class="dv">0</span>)</span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>) <span class="sc">%&gt;%</span></span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tidy</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">gt</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<div id="qzkirdslat" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>#qzkirdslat table {
+  font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#qzkirdslat thead, #qzkirdslat tbody, #qzkirdslat tfoot, #qzkirdslat tr, #qzkirdslat td, #qzkirdslat th {
+  border-style: none;
+}
+
+#qzkirdslat p {
+  margin: 0;
+  padding: 0;
+}
+
+#qzkirdslat .gt_table {
+  display: table;
+  border-collapse: collapse;
+  line-height: normal;
+  margin-left: auto;
+  margin-right: auto;
+  color: #333333;
+  font-size: 16px;
+  font-weight: normal;
+  font-style: normal;
+  background-color: #FFFFFF;
+  width: auto;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #A8A8A8;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #A8A8A8;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+}
+
+#qzkirdslat .gt_caption {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+#qzkirdslat .gt_title {
+  color: #333333;
+  font-size: 125%;
+  font-weight: initial;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-color: #FFFFFF;
+  border-bottom-width: 0;
+}
+
+#qzkirdslat .gt_subtitle {
+  color: #333333;
+  font-size: 85%;
+  font-weight: initial;
+  padding-top: 3px;
+  padding-bottom: 5px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-color: #FFFFFF;
+  border-top-width: 0;
+}
+
+#qzkirdslat .gt_heading {
+  background-color: #FFFFFF;
+  text-align: center;
+  border-bottom-color: #FFFFFF;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#qzkirdslat .gt_bottom_border {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#qzkirdslat .gt_col_headings {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#qzkirdslat .gt_col_heading {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 6px;
+  padding-left: 5px;
+  padding-right: 5px;
+  overflow-x: hidden;
+}
+
+#qzkirdslat .gt_column_spanner_outer {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+#qzkirdslat .gt_column_spanner_outer:first-child {
+  padding-left: 0;
+}
+
+#qzkirdslat .gt_column_spanner_outer:last-child {
+  padding-right: 0;
+}
+
+#qzkirdslat .gt_column_spanner {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  overflow-x: hidden;
+  display: inline-block;
+  width: 100%;
+}
+
+#qzkirdslat .gt_spanner_row {
+  border-bottom-style: hidden;
+}
+
+#qzkirdslat .gt_group_heading {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  text-align: left;
+}
+
+#qzkirdslat .gt_empty_group_heading {
+  padding: 0.5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: middle;
+}
+
+#qzkirdslat .gt_from_md > :first-child {
+  margin-top: 0;
+}
+
+#qzkirdslat .gt_from_md > :last-child {
+  margin-bottom: 0;
+}
+
+#qzkirdslat .gt_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  margin: 10px;
+  border-top-style: solid;
+  border-top-width: 1px;
+  border-top-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  overflow-x: hidden;
+}
+
+#qzkirdslat .gt_stub {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#qzkirdslat .gt_stub_row_group {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+  vertical-align: top;
+}
+
+#qzkirdslat .gt_row_group_first td {
+  border-top-width: 2px;
+}
+
+#qzkirdslat .gt_row_group_first th {
+  border-top-width: 2px;
+}
+
+#qzkirdslat .gt_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#qzkirdslat .gt_first_summary_row {
+  border-top-style: solid;
+  border-top-color: #D3D3D3;
+}
+
+#qzkirdslat .gt_first_summary_row.thick {
+  border-top-width: 2px;
+}
+
+#qzkirdslat .gt_last_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#qzkirdslat .gt_grand_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#qzkirdslat .gt_first_grand_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-style: double;
+  border-top-width: 6px;
+  border-top-color: #D3D3D3;
+}
+
+#qzkirdslat .gt_last_grand_summary_row_top {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: double;
+  border-bottom-width: 6px;
+  border-bottom-color: #D3D3D3;
+}
+
+#qzkirdslat .gt_striped {
+  background-color: rgba(128, 128, 128, 0.05);
+}
+
+#qzkirdslat .gt_table_body {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#qzkirdslat .gt_footnotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#qzkirdslat .gt_footnote {
+  margin: 0px;
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#qzkirdslat .gt_sourcenotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#qzkirdslat .gt_sourcenote {
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#qzkirdslat .gt_left {
+  text-align: left;
+}
+
+#qzkirdslat .gt_center {
+  text-align: center;
+}
+
+#qzkirdslat .gt_right {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+#qzkirdslat .gt_font_normal {
+  font-weight: normal;
+}
+
+#qzkirdslat .gt_font_bold {
+  font-weight: bold;
+}
+
+#qzkirdslat .gt_font_italic {
+  font-style: italic;
+}
+
+#qzkirdslat .gt_super {
+  font-size: 65%;
+}
+
+#qzkirdslat .gt_footnote_marks {
+  font-size: 75%;
+  vertical-align: 0.4em;
+  position: initial;
+}
+
+#qzkirdslat .gt_asterisk {
+  font-size: 100%;
+  vertical-align: 0;
+}
+
+#qzkirdslat .gt_indent_1 {
+  text-indent: 5px;
+}
+
+#qzkirdslat .gt_indent_2 {
+  text-indent: 10px;
+}
+
+#qzkirdslat .gt_indent_3 {
+  text-indent: 15px;
+}
+
+#qzkirdslat .gt_indent_4 {
+  text-indent: 20px;
+}
+
+#qzkirdslat .gt_indent_5 {
+  text-indent: 25px;
+}
+
+#qzkirdslat .katex-display {
+  display: inline-flex !important;
+  margin-bottom: 0.75em !important;
+}
+
+#qzkirdslat div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
+  height: 0px !important;
+}
+</style>
+
+<table class="gt_table caption-top table table-sm table-striped small" data-quarto-bootstrap="false">
+<thead>
+<tr class="gt_col_headings header">
+<th id="term" class="gt_col_heading gt_columns_bottom_border gt_left" data-quarto-table-cell-role="th" scope="col">term</th>
+<th id="estimate" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">estimate</th>
+<th id="std.error" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">std.error</th>
+<th id="statistic" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">statistic</th>
+<th id="p.value" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">p.value</th>
+</tr>
+</thead>
+<tbody class="gt_table_body">
+<tr class="odd">
+<td class="gt_row gt_left" headers="term">(Intercept)</td>
+<td class="gt_row gt_right" headers="estimate">-2.547400e+00</td>
+<td class="gt_row gt_right" headers="std.error">8.502115e-02</td>
+<td class="gt_row gt_right" headers="statistic">-29.961959</td>
+<td class="gt_row gt_right" headers="p.value">3.073830e-197</td>
+</tr>
+<tr class="even">
+<td class="gt_row gt_left" headers="term">has_intervention_pt</td>
+<td class="gt_row gt_right" headers="estimate">-3.515875e-01</td>
+<td class="gt_row gt_right" headers="std.error">6.974860e-02</td>
+<td class="gt_row gt_right" headers="statistic">-5.040782</td>
+<td class="gt_row gt_right" headers="p.value">4.636327e-07</td>
+</tr>
+<tr class="odd">
+<td class="gt_row gt_left" headers="term">hosp_date_days</td>
+<td class="gt_row gt_right" headers="estimate">-8.874092e-05</td>
+<td class="gt_row gt_right" headers="std.error">6.983033e-05</td>
+<td class="gt_row gt_right" headers="statistic">-1.270808</td>
+<td class="gt_row gt_right" headers="p.value">2.037971e-01</td>
+</tr>
+<tr class="even">
+<td class="gt_row gt_left" headers="term">age</td>
+<td class="gt_row gt_right" headers="estimate">1.350544e-02</td>
+<td class="gt_row gt_right" headers="std.error">1.164437e-03</td>
+<td class="gt_row gt_right" headers="statistic">11.598251</td>
+<td class="gt_row gt_right" headers="p.value">4.205839e-31</td>
+</tr>
+<tr class="odd">
+<td class="gt_row gt_left" headers="term">sexM</td>
+<td class="gt_row gt_right" headers="estimate">-5.971290e-02</td>
+<td class="gt_row gt_right" headers="std.error">5.136212e-02</td>
+<td class="gt_row gt_right" headers="statistic">-1.162586</td>
+<td class="gt_row gt_right" headers="p.value">2.449974e-01</td>
+</tr>
+<tr class="even">
+<td class="gt_row gt_left" headers="term">ssdi</td>
+<td class="gt_row gt_right" headers="estimate">5.094097e-01</td>
+<td class="gt_row gt_right" headers="std.error">8.940963e-02</td>
+<td class="gt_row gt_right" headers="statistic">5.697481</td>
+<td class="gt_row gt_right" headers="p.value">1.215908e-08</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+</section>
+<section id="glmer-model" class="level2">
+<h2 class="anchored" data-anchor-id="glmer-model">GLMER Model</h2>
+<p><span class="math display">\[
+P(Y_{ij} = 1) = logit^{-1}(\alpha_j + \beta T_i + \gamma'X_i)
+\]</span></p>
+<p><span class="math display">\[
+\alpha_j \sim N(0, \sigma^2_j)
+\]</span></p>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>m2 <span class="ot">&lt;-</span> <span class="fu">glmer</span>(</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>  readmit <span class="sc">~</span> (<span class="dv">1</span> <span class="sc">|</span> practice_id) <span class="sc">+</span> has_intervention_pt <span class="sc">+</span> hosp_date_days <span class="sc">+</span> age <span class="sc">+</span> sex <span class="sc">+</span> ssdi,</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">family =</span> binomial,</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> patient_outcome <span class="sc">%&gt;%</span> <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(hosp_date), esrd <span class="sc">==</span> <span class="dv">0</span>)</span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>m2</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>Generalized linear mixed model fit by maximum likelihood (Laplace
+  Approximation) [glmerMod]
+ Family: binomial  ( logit )
+Formula: readmit ~ (1 | practice_id) + has_intervention_pt + hosp_date_days +  
+    age + sex + ssdi
+   Data: patient_outcome %&gt;% filter(!is.na(hosp_date), esrd == 0)
+      AIC       BIC    logLik -2*log(L)  df.resid 
+10515.457 10568.633 -5250.729 10501.457     14707 
+Random effects:
+ Groups      Name        Std.Dev.
+ practice_id (Intercept) 0.1498  
+Number of obs: 14714, groups:  practice_id, 80
+Fixed Effects:
+        (Intercept)  has_intervention_pt       hosp_date_days  
+         -2.572e+00           -3.360e-01           -9.816e-05  
+                age                 sexM                 ssdi  
+          1.376e-02           -5.685e-02            5.286e-01  </code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="fu">confint</span>(m2, <span class="at">method =</span> <span class="st">"Wald"</span>) <span class="co"># other options: profile, boot</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>                            2.5 %        97.5 %
+.sig01                         NA            NA
+(Intercept)         -2.7457490549 -2.399115e+00
+has_intervention_pt -0.4840709226 -1.879410e-01
+hosp_date_days      -0.0002388243  4.250437e-05
+age                  0.0114194716  1.609946e-02
+sexM                -0.1577955201  4.409353e-02
+ssdi                 0.3515041735  7.056245e-01</code></pre>
+</div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(m2)<span class="sc">$</span>coefficients <span class="sc">%&gt;%</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">as_tibble</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">gt</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">fmt_number</span>(<span class="fu">c</span>(Estimate, <span class="st">`</span><span class="at">Std. Error</span><span class="st">`</span>), <span class="at">decimals =</span> <span class="dv">3</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">fmt_number</span>(<span class="fu">c</span>(<span class="st">`</span><span class="at">z value</span><span class="st">`</span>), <span class="at">decimals =</span> <span class="dv">2</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">fmt_number</span>(<span class="fu">c</span>(<span class="st">`</span><span class="at">Pr(&gt;|z|)</span><span class="st">`</span>), <span class="at">decimals =</span> <span class="dv">4</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<div id="ybkjgxvewp" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>#ybkjgxvewp table {
+  font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#ybkjgxvewp thead, #ybkjgxvewp tbody, #ybkjgxvewp tfoot, #ybkjgxvewp tr, #ybkjgxvewp td, #ybkjgxvewp th {
+  border-style: none;
+}
+
+#ybkjgxvewp p {
+  margin: 0;
+  padding: 0;
+}
+
+#ybkjgxvewp .gt_table {
+  display: table;
+  border-collapse: collapse;
+  line-height: normal;
+  margin-left: auto;
+  margin-right: auto;
+  color: #333333;
+  font-size: 16px;
+  font-weight: normal;
+  font-style: normal;
+  background-color: #FFFFFF;
+  width: auto;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #A8A8A8;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #A8A8A8;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+}
+
+#ybkjgxvewp .gt_caption {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+#ybkjgxvewp .gt_title {
+  color: #333333;
+  font-size: 125%;
+  font-weight: initial;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-color: #FFFFFF;
+  border-bottom-width: 0;
+}
+
+#ybkjgxvewp .gt_subtitle {
+  color: #333333;
+  font-size: 85%;
+  font-weight: initial;
+  padding-top: 3px;
+  padding-bottom: 5px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-color: #FFFFFF;
+  border-top-width: 0;
+}
+
+#ybkjgxvewp .gt_heading {
+  background-color: #FFFFFF;
+  text-align: center;
+  border-bottom-color: #FFFFFF;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#ybkjgxvewp .gt_bottom_border {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#ybkjgxvewp .gt_col_headings {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#ybkjgxvewp .gt_col_heading {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 6px;
+  padding-left: 5px;
+  padding-right: 5px;
+  overflow-x: hidden;
+}
+
+#ybkjgxvewp .gt_column_spanner_outer {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+#ybkjgxvewp .gt_column_spanner_outer:first-child {
+  padding-left: 0;
+}
+
+#ybkjgxvewp .gt_column_spanner_outer:last-child {
+  padding-right: 0;
+}
+
+#ybkjgxvewp .gt_column_spanner {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  overflow-x: hidden;
+  display: inline-block;
+  width: 100%;
+}
+
+#ybkjgxvewp .gt_spanner_row {
+  border-bottom-style: hidden;
+}
+
+#ybkjgxvewp .gt_group_heading {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  text-align: left;
+}
+
+#ybkjgxvewp .gt_empty_group_heading {
+  padding: 0.5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: middle;
+}
+
+#ybkjgxvewp .gt_from_md > :first-child {
+  margin-top: 0;
+}
+
+#ybkjgxvewp .gt_from_md > :last-child {
+  margin-bottom: 0;
+}
+
+#ybkjgxvewp .gt_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  margin: 10px;
+  border-top-style: solid;
+  border-top-width: 1px;
+  border-top-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  overflow-x: hidden;
+}
+
+#ybkjgxvewp .gt_stub {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#ybkjgxvewp .gt_stub_row_group {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+  vertical-align: top;
+}
+
+#ybkjgxvewp .gt_row_group_first td {
+  border-top-width: 2px;
+}
+
+#ybkjgxvewp .gt_row_group_first th {
+  border-top-width: 2px;
+}
+
+#ybkjgxvewp .gt_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#ybkjgxvewp .gt_first_summary_row {
+  border-top-style: solid;
+  border-top-color: #D3D3D3;
+}
+
+#ybkjgxvewp .gt_first_summary_row.thick {
+  border-top-width: 2px;
+}
+
+#ybkjgxvewp .gt_last_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#ybkjgxvewp .gt_grand_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#ybkjgxvewp .gt_first_grand_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-style: double;
+  border-top-width: 6px;
+  border-top-color: #D3D3D3;
+}
+
+#ybkjgxvewp .gt_last_grand_summary_row_top {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: double;
+  border-bottom-width: 6px;
+  border-bottom-color: #D3D3D3;
+}
+
+#ybkjgxvewp .gt_striped {
+  background-color: rgba(128, 128, 128, 0.05);
+}
+
+#ybkjgxvewp .gt_table_body {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#ybkjgxvewp .gt_footnotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#ybkjgxvewp .gt_footnote {
+  margin: 0px;
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#ybkjgxvewp .gt_sourcenotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#ybkjgxvewp .gt_sourcenote {
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#ybkjgxvewp .gt_left {
+  text-align: left;
+}
+
+#ybkjgxvewp .gt_center {
+  text-align: center;
+}
+
+#ybkjgxvewp .gt_right {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+#ybkjgxvewp .gt_font_normal {
+  font-weight: normal;
+}
+
+#ybkjgxvewp .gt_font_bold {
+  font-weight: bold;
+}
+
+#ybkjgxvewp .gt_font_italic {
+  font-style: italic;
+}
+
+#ybkjgxvewp .gt_super {
+  font-size: 65%;
+}
+
+#ybkjgxvewp .gt_footnote_marks {
+  font-size: 75%;
+  vertical-align: 0.4em;
+  position: initial;
+}
+
+#ybkjgxvewp .gt_asterisk {
+  font-size: 100%;
+  vertical-align: 0;
+}
+
+#ybkjgxvewp .gt_indent_1 {
+  text-indent: 5px;
+}
+
+#ybkjgxvewp .gt_indent_2 {
+  text-indent: 10px;
+}
+
+#ybkjgxvewp .gt_indent_3 {
+  text-indent: 15px;
+}
+
+#ybkjgxvewp .gt_indent_4 {
+  text-indent: 20px;
+}
+
+#ybkjgxvewp .gt_indent_5 {
+  text-indent: 25px;
+}
+
+#ybkjgxvewp .katex-display {
+  display: inline-flex !important;
+  margin-bottom: 0.75em !important;
+}
+
+#ybkjgxvewp div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
+  height: 0px !important;
+}
+</style>
+
+<table class="gt_table caption-top table table-sm table-striped small" data-quarto-bootstrap="false">
+<thead>
+<tr class="gt_col_headings header">
+<th id="Estimate" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">Estimate</th>
+<th id="Std.-Error" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">Std. Error</th>
+<th id="z-value" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">z value</th>
+<th id="Pr(>|z|)" class="gt_col_heading gt_columns_bottom_border gt_right" data-quarto-table-cell-role="th" scope="col">Pr(&gt;|z|)</th>
+</tr>
+</thead>
+<tbody class="gt_table_body">
+<tr class="odd">
+<td class="gt_row gt_right" headers="Estimate">−2.572</td>
+<td class="gt_row gt_right" headers="Std. Error">0.088</td>
+<td class="gt_row gt_right" headers="z value">−29.09</td>
+<td class="gt_row gt_right" headers="Pr(>|z|)">0.0000</td>
+</tr>
+<tr class="even">
+<td class="gt_row gt_right" headers="Estimate">−0.336</td>
+<td class="gt_row gt_right" headers="Std. Error">0.076</td>
+<td class="gt_row gt_right" headers="z value">−4.45</td>
+<td class="gt_row gt_right" headers="Pr(>|z|)">0.0000</td>
+</tr>
+<tr class="odd">
+<td class="gt_row gt_right" headers="Estimate">0.000</td>
+<td class="gt_row gt_right" headers="Std. Error">0.000</td>
+<td class="gt_row gt_right" headers="z value">−1.37</td>
+<td class="gt_row gt_right" headers="Pr(>|z|)">0.1714</td>
+</tr>
+<tr class="even">
+<td class="gt_row gt_right" headers="Estimate">0.014</td>
+<td class="gt_row gt_right" headers="Std. Error">0.001</td>
+<td class="gt_row gt_right" headers="z value">11.52</td>
+<td class="gt_row gt_right" headers="Pr(>|z|)">0.0000</td>
+</tr>
+<tr class="odd">
+<td class="gt_row gt_right" headers="Estimate">−0.057</td>
+<td class="gt_row gt_right" headers="Std. Error">0.052</td>
+<td class="gt_row gt_right" headers="z value">−1.10</td>
+<td class="gt_row gt_right" headers="Pr(>|z|)">0.2697</td>
+</tr>
+<tr class="even">
+<td class="gt_row gt_right" headers="Estimate">0.529</td>
+<td class="gt_row gt_right" headers="Std. Error">0.090</td>
+<td class="gt_row gt_right" headers="z value">5.85</td>
+<td class="gt_row gt_right" headers="Pr(>|z|)">0.0000</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

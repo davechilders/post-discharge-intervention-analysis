@@ -1,0 +1,342 @@
+---
+title: "Assessing Impact of Post-Discharge Care Mangement on Hospital Readmissions"
+format: html
+knitr:
+  opts_chunk:
+    code-fold: true
+---
+
+```{r}
+#| label: libraries
+#| message: false
+
+library(fs)
+library(tidyverse)
+library(arrow)
+library(lme4)
+library(broom)
+library(gt)
+library(scales)
+theme_set(theme_bw())
+```
+
+## Read Data
+
+```{r}
+#| label: read-data
+
+prac <- read_parquet("practice-data.parquet")
+
+pat <- read_parquet("patients.parquet")
+
+hosp <- read_parquet("hospitalizations.parquet")
+```
+
+## Overview
+
+Under traditional fee-for-service reimbursement, a primary care practice has limited financial incentive to reduce hospitalizations among their patient population. Value-based care is a healthcare delivery and payment models that reward providers for the quality of care and cost efficient. For example, a primary care practice might enter a financial contract with an insurance company that involves reimbursing the practice for limiting the total healthcare expenditures for patients attributed to that practice.
+
+Hospital admissions are a substantial component of total US healthcare spending. Reducing hospital readmissions during the 30-day post-discharge window is an opportunity to improve patient outcomes while reducing costs. Under fee-for-service, there is little incentive to invest in post-discharge care management to reduce readmission rates. However, value-based care models offer an opportunity for primary care providers to receive reimbursement for the savings obtained by reducing readmissions.
+
+## The Research Question
+
+For a program designed to reduce the prevalence of hospital readmissions, it is important to assess the impact of that program in order to determine if the cost of the program justifies the reduction in healthcare spend and improvement in patient outcomes.
+
+In this analysis, we use simulated data to demonstrate estimtaing the impact of a primary care practice incorporating post-discharge care management on the probability of hospital readmission for any cause during 30 days.
+
+## Drivers of Readmission
+
+There are many factors beyond care management which may impact the probability of readmission, including:
+
+- patient clinical factors such as primary diagnosis and comorbidities
+- social drivers of heath including access to housing, social support, and transportation
+- quality of primary care
+
+## Simulated Data
+
+For this analysis, we simulate data on practices, patients, and hospitalizations. 
+
+In a real-world scenario, we would expect to see the following in the data:
+
+- independent practices will have varying numbers of providers
+- the number of patients per practice will vary based on the number of providers and the payer max (e.g. heavy medicare practices tend to have smaller patient panels)
+- the timing of the intervention will vary across practices
+- the rate of both hospitalization and readmission will vary by both patient and practice characteristics
+
+The simulated data for this analysis (available [here]) incorporates all of these features.
+
+
+<!--
+This is an overview of the simulation:
+
+- The simulation is over 80 primary care practices.
+- Because practices with more providers will have more attributed patients:
+- The number of providers per practice is simulated from $Poission(3)$ with a minimum of one provider at a practice
+- For a given practice, the payer mix simulated as follows:
+    - The medicaid payer proportion is simulated from $Uniform(0, 0.2)$
+    - The medicare payer proportion is simulated from $Uniform(0, 0.8)$
+    - Private payers are the remaining proportion
+    - For simplicity, we assume no self-pay or dual eligibility
+- Because of average utilization differences among medicare, medicaid, and private payer, practices with large simulated medicare patients have a higher volume of patients.
+- Age, gender, and medicare eligibility due to end-stage renal disease (ESRD) and social security disability (SSDI) are simulated
+-->
+
+## Practice Data
+
+This is a glimpse of the simulated practice data. 
+
+```{r}
+#| label: practice-data
+#summary(prac$intervention_start)
+
+prac %>%
+    slice(1:8) %>%
+    gt() %>%
+    cols_label(
+        practice_id = "Prac ID",
+        n_providers = "# Providers",
+        n_medicare_pt = "# Medicare Pts",
+        n_medicaid_pt = "# Medicaid Pts",
+        n_private_pt = "# Private Pts",
+        n_pt = "# Patients",
+        has_intervention = "Case Mgmt",
+        intervention_start = "Case Mgmt Start"
+    ) %>%
+    tab_header("Practice Level Data") %>%
+    tab_footnote("This is the treatment variable", cells_column_labels(has_intervention)) %>%
+    tab_footnote("The intervention start date varies by practice between '2023-01-01' and '2025-11-01'", cells_column_labels(intervention_start)) %>%
+    fmt_number(starts_with("n_"), decimals = 0)
+```
+
+## Patient Data
+
+```{r}
+#| label: patient-data
+pat %>%
+    group_by(insurance, esrd, ssdi) %>%
+    sample_n(2) %>%
+    ungroup() %>%
+    gt() %>%
+    tab_header("Simulated Patient Level Data") %>%
+    cols_label(
+        practice_id = "Prac ID",
+        patient_id = "Patient ID",
+        insurance = "Insurance",
+        age = "Age",
+        sex = "Sex",
+        esrd = "ESRD",
+        ssdi = "SSDI"
+    ) %>% 
+    tab_footnote("Patient ID is nested within Practice ID", cells_column_labels(patient_id))
+```
+
+## Hospitalization and Readmission Data
+
+```{r}
+#| label: hospitalization-data
+hosp %>%
+    slice(1:10) %>%
+    gt() %>%
+    tab_header("Simulated Hospitalization Level Data") %>%
+    cols_label(
+        practice_id = "Prac ID",
+        patient_id = "Patient ID",
+        hosp_date = "Hospitalization Date",
+        readmit = "Readmission"
+    ) %>%
+    tab_footnote("Outcome of Interest: All-cause readmission within 30 days of discharge", cells_column_labels(readmit)) %>%
+    tab_footnote("Two patients hospitalized on the same day may have different values for the treatment of interest (received post-discharge care management)",
+    cells_column_labels(hosp_date))
+```
+
+## Other data issues not considered
+
+- ESRD
+- other comborbidities
+- patient attribution
+- Dual eligibility
+- Other coviarates
+- Lags in implementation of intervention
+- Multiple hospitalizations and readmissions
+
+## Compute Patient Outcome
+
+Unfold this 'Code' to see the code for joining the three tables together and computing the binary treatment indicator for care-management. 
+
+```{r}
+#| label: patient-outcome
+
+patient_outcome <- pat %>%
+  left_join(prac, by = "practice_id") %>%
+  left_join(hosp, by = c("practice_id", "patient_id")) %>%
+  mutate(
+    has_intervention_pt = case_when(
+      has_intervention == 0 ~ 0,
+      # if the patient is hospitalized before the practice adopts care managment,
+      # the patient has a 0 for treatment even if the practice subsequently adopts care management
+      intervention_start > hosp_date ~ 0,
+      TRUE ~ 1
+    ),
+    hosp_date_days = as.integer(hosp_date - as.Date("2022-01-01")),
+  )
+```
+
+## Analysis Dataset
+
+```{r}
+#| label: analysis-dataset
+
+patient_outcome %>%
+    select(practice_id, patient_id, insurance, age, sex, esrd, ssdi, hosp_date, has_intervention_pt, readmit) %>%
+    filter(!is.na(hosp_date)) %>%
+    group_by(readmit) %>%
+    sample_n(3) %>%
+    ungroup() %>%
+    gt() %>%
+    tab_header("Analysis Data Set", subtitle = "One row per patient for patients that have been hospitalized") %>% 
+    cols_label(
+        practice_id = "Prac ID",
+        patient_id = "Patient ID",
+        insurance = "Insurance",
+        age = "Age",
+        sex = "Sex",
+        esrd = "ESRD",
+        ssdi = "SSDI",
+        hosp_date = "Hospitalization Date",
+        has_intervention_pt = "Case Management",
+        readmit = "Readmission"
+    ) %>%
+    tab_footnote("Treatment of Interest", cells_column_labels(has_intervention_pt)) %>%
+    tab_footnote("Outcome of Interest", cells_column_labels(readmit))
+```
+
+## Exploratory Analysis
+
+```{r}
+#| label: eda
+
+# hospitalization rate
+patient_outcome %>%
+    count(is_hosp = !is.na(hosp_date)) %>%
+    mutate(p = n / sum(n))
+
+# hospitalization rate by insurance
+patient_outcome %>%
+    count(insurance, is_hosp = !is.na(hosp_date)) %>%
+    group_by(insurance) %>%
+    mutate(p = n / sum(n))
+
+# readmission rate
+patient_outcome %>%
+    filter(!is.na(hosp_date)) %>%
+    count(readmit) %>%
+    mutate(p = n / sum(n))
+
+# readmission rate by ESRD
+patient_outcome %>%
+    filter(!is.na(hosp_date)) %>%
+    count(esrd, readmit) %>%
+    group_by(esrd) %>%
+    mutate(p = n / sum(n))
+
+
+
+# per practice: medicare mix vs readmit rate
+medicare_outcome_df <- patient_outcome %>%
+    group_by(practice_id) %>%
+    summarise(
+        medicare_mix = sum(insurance == "medicare") / n(),
+        readmit_rate = sum(readmit[!is.na(hosp_date)]) / sum(!is.na(hosp_date))
+    )
+
+ggplot(medicare_outcome_df, aes(x = medicare_mix, y = readmit_rate)) +
+  geom_point(alpha = 0.5) +
+  labs(
+    title = "Readmit rate vs Medicare Mix",
+    subtitle = "One dot per practice",
+    x = "% Patients with Medicare",
+    y = "Readmission Rate"
+  ) +
+    expand_limits(y = 0) +
+    scale_y_continuous(breaks = pretty_breaks(8), label = percent)
+
+lm(readmit_rate ~ medicare_mix, data = medicare_outcome_df) %>% tidy()
+
+
+# readmit vs trend lines
+patient_outcome %>%
+    filter(!is.na(hosp_date)) %>%
+    ggplot(aes(x = hosp_date, y = readmit)) +
+    geom_jitter(alpha = 0.1, width = 0, height = 0.1) +
+    stat_smooth(method = "glm", method.args = list(family = binomial), se = FALSE) +
+    scale_y_continuous(breaks = c(0, 1), labels = c("No Readmit", "Readmit")) +
+    labs(
+        title = "Rate of Readmissions over time",
+        subtitle = "Baseline trend from logistic model over time",
+        x = "Hospitalization Date",
+        y = NULL
+    )
+
+
+# readmit vs case management
+patient_outcome %>%
+    filter(
+        esrd == 0,
+        !is.na(hosp_date)
+    ) %>%
+    count(has_intervention_pt, readmit) %>%
+    group_by(has_intervention_pt) %>%
+    mutate(p = n / sum(n))
+```
+
+## Model
+
+
+
+
+
+## GLM Model
+
+```{r}
+#| label: glm-model
+
+glm(
+  readmit ~ has_intervention_pt + hosp_date_days + age + sex + ssdi,
+  family = binomial(link = "logit"),
+  data = patient_outcome %>% filter(!is.na(hosp_date), esrd == 0)
+) %>%
+  tidy() %>%
+  gt()
+```
+
+## GLMER Model
+
+$$
+P(Y_{ij} = 1) = logit^{-1}(\alpha_j + \beta T_i + \gamma'X_i)
+$$
+
+$$
+\alpha_j \sim N(0, \sigma^2_j)
+$$
+
+```{r}
+#| label: glmer-model
+
+m2 <- glmer(
+  readmit ~ (1 | practice_id) + has_intervention_pt + hosp_date_days + age + sex + ssdi,
+  family = binomial,
+  data = patient_outcome %>% filter(!is.na(hosp_date), esrd == 0)
+)
+
+m2
+confint(m2, method = "Wald") # other options: profile, boot
+
+
+summary(m2)$coefficients %>%
+    as_tibble() %>%
+    gt() %>%
+    fmt_number(c(Estimate, `Std. Error`), decimals = 3) %>%
+    fmt_number(c(`z value`), decimals = 2) %>%
+    fmt_number(c(`Pr(>|z|)`), decimals = 4)
+```
+
