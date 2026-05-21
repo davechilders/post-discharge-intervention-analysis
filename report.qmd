@@ -32,7 +32,7 @@ pat <- read_parquet("patients.parquet")
 hosp <- read_parquet("hospitalizations.parquet")
 ```
 
-Github simulation [code](https://github.com/davechilders/post-discharge-intervention-analysis/blob/main/01-data-simulation.R)
+Github simulation [code](https://github.com/davechilders/post-discharge-intervention-analysis/blob/main/02-data-simulation-clean.R)
 
 Github project [repo](https://github.com/davechilders/post-discharge-intervention-analysis)
 
@@ -70,7 +70,7 @@ There are also many factors beyond care management which may impact the probabil
 - social drivers of heath including access to housing, social support, and transportation
 - quality of primary care
 
-The [simulated data](https://github.com/davechilders/post-discharge-intervention-analysis) for this analysis incorporates all of these characteristics.
+The [simulated data](https://github.com/davechilders/post-discharge-intervention-analysis/blob/main/02-data-simulation-clean.R) for this analysis incorporates all of these characteristics.
 
 
 <!--
@@ -481,6 +481,8 @@ $$
 - $X_3$ is age
 - $X_4$ is sex
 - $X_5$ is ssdi status
+
+## Results
 
 ```{r}
 #| label: glmer-model
