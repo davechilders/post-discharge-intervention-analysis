@@ -412,19 +412,21 @@ ggplot(medicare_outcome_df, aes(x = medicare_mix, y = readmit_rate)) +
 - should allow for variation among practices beyond what is captured in practice-level covariates
 - 
 
+```{r}
+#| label: model-data
+model_data <- patient_outcome %>% 
+    filter(
+        !is.na(hosp_date), 
+        hosp_date >= as.Date("2023-01-01"),
+        esrd == 0
+        )
+```
 
 <!--
 ### GLM Model
 
 ```{r}
 #| label: glm-model
-
-# model_data <- patient_outcome %>% 
-#     filter(
-#         !is.na(hosp_date), 
-#         hosp_date >= as.Date("2023-01-01"),
-#         esrd == 0
-#         )
 
 # glm(
 #   readmit ~ has_intervention_pt + hosp_date_days + age + sex + ssdi,
