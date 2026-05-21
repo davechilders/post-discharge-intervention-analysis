@@ -1,6 +1,12 @@
 ---
 title: "Assessing Impact of Post-Discharge Care Mangement on Hospital Readmissions"
-format: html
+author: "Dave Childers"
+date: today
+format:
+  html:
+    theme: cosmo
+    toc: true
+    embed-resources: true
 knitr:
   opts_chunk:
     code-fold: true
