@@ -10,13 +10,11 @@ reduces 30-day hospital readmission rates in a value-based care setting.
 ## Overview
 
 This project simulates a population health intervention in which primary care 
-practices adopt a post-discharge care management program — assigning care 
-managers to follow up with patients within 48 hours of hospital discharge to 
+practices adopt a post-discharge care management program. While this project uses simulated data, a real program might assigning care managers to follow up with patients within 48 hours of hospital discharge to 
 coordinate medications, schedule follow-up visits, and flag early warning signs.
 
 The analysis evaluates whether practices that adopted the program saw a 
-reduction in 30-day readmission rates relative to non-adopting practices, 
-using a staggered adoption design that mirrors real-world ACO program rollouts.
+reduction in 30-day readmission rates relative to non-adopting practices. We simulate a staggered adoption design to reflect real-world rollouts of such programs. 
 
 ---
 
