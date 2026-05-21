@@ -73,6 +73,9 @@ There are also many factors beyond care management which may impact the probabil
 
 The [simulated data](https://github.com/davechilders/post-discharge-intervention-analysis/blob/main/02-data-simulation-clean.R) for this analysis incorporates many of these characteristics.
 
+### Treatment Assigment
+
+For the purposes of this study, we assume that practices *selected* if and when to participate in the treatment of adoption care management. If practices were *assigned* to participate in the trial, then randomization would indicate there are no systematic differences among other pre-treatment variables that could be confounding. In the absence of randomization, it requires much stronger assumptions and specialized methods to ensure balance among the treatment and control practices.
 
 <!--
 This is an overview of the simulation:
@@ -666,4 +669,4 @@ gt(fixef_results) %>%
 
 ## Conclusion
 
-In this simulation, post-discharge care management is associated with a 30% reduced odds ($\frac{P(Y=1)}{P(Y=0)}$) of readmission.  
+In this simulation, post-discharge care management is associated with a 30% reduced odds of readmission. Is this effect causal? For causal inference, we would need to assume ignorability of the treatment assignment. Equivalently, we would need to assume all confounding covariates were included. This study was simulated, so we are certain that all confounding covariates have been included. However, in practice, there are likely other covariates impacting treatment selection and readmission. Therefore, we would want to employ other methods such as matching in order to make causal claims.
