@@ -13,7 +13,7 @@ knitr:
     message: false
 ---
 
-**Note:** For readability, the code in this report is hidden by default. You can view any code section by clicking `>Code`.
+**Note:** For readability, the code in this report is hidden by default. View any code section by clicking `>Code`.
 
 ```{r}
 #| label: packages_data
@@ -41,7 +41,7 @@ Github project [repo](https://github.com/davechilders/post-discharge-interventio
 
 ### Background
 
-Under traditional fee-for-service reimbursement, a primary care practice has limited financial incentive to reduce hospitalizations among their patient population. Value-based care is a healthcare delivery and payment model that reward providers for the quality of care and cost efficient. For example, a primary care practice might enter a financial contract with an insurance company that involves reimbursing the practice for limiting the total healthcare expenditures for patients attributed to that practice.
+Under traditional fee-for-service reimbursement, a primary care practice has limited financial incentive to reduce hospitalizations among their patient population. Value-based care is a healthcare delivery and payment model that rewards providers for the quality and cost efficiency of care. For example, a primary care practice might enter a financial contract with an insurance company that involves reimbursing the practice for limiting the total healthcare expenditures for patients attributed to that practice.
 
 Hospital admissions are a substantial component of total US healthcare spending. Reducing hospital readmissions during the 30-day post-discharge window is an opportunity to improve patient outcomes while reducing costs. Under fee-for-service, there is little incentive to invest in post-discharge care management to reduce readmission rates. However, value-based care models offer an opportunity for primary care providers to receive reimbursement for the savings obtained by reducing readmissions.
 
@@ -49,7 +49,7 @@ Hospital admissions are a substantial component of total US healthcare spending.
 
 For a program designed to reduce the prevalence of hospital readmissions, it is important to assess the impact of that program in order to determine if the cost of the program justifies the reduction in healthcare spend and improvement in patient outcomes.
 
-In this analysis, we use simulated data to demonstrate estimating the impact of a primary care practice incorporating post-discharge care management on the probability of hospital readmission for any cause during 30 days.
+In this analysis, we use simulated data to demonstrate estimating the impact of a primary care practice incorporating post-discharge care management on the probability of all-cause hospital readmission during 30 days.
 
 ## Data Overview
 
@@ -57,7 +57,7 @@ In this analysis, we use simulated data to demonstrate estimating the impact of 
 
 For this analysis, we simulate data on practices, patients, and hospitalizations. 
 
-In a real-world scenario, we would expect to see the following in the data:
+In a real-world scenario, we would expect the following:
 
 - independent practices will have varying numbers of providers
 - the number of patients per practice will vary based on the number of providers and the payer max (e.g. heavy medicare practices tend to have smaller patient panels)
@@ -70,7 +70,7 @@ There are also many factors beyond care management which may impact the probabil
 - social drivers of heath including access to housing, social support, and transportation
 - quality of primary care
 
-The [simulated data](https://github.com/davechilders/post-discharge-intervention-analysis/blob/main/02-data-simulation-clean.R) for this analysis incorporates all of these characteristics.
+The [simulated data](https://github.com/davechilders/post-discharge-intervention-analysis/blob/main/02-data-simulation-clean.R) for this analysis incorporates many of these characteristics.
 
 
 <!--
@@ -158,17 +158,19 @@ hosp %>%
 
 ### Other data issues not considered
 
-- ESRD
-- other comorbidities
-- patient attribution
-- Dual eligibility
-- Other covariates
-- Lags in implementation of intervention
-- Multiple hospitalizations and readmissions
+Real-world data would likely have additional complications such as:
+
+- ambiguity in attributing patients to practices
+- many hospitalizations for the same patient within the study period
+- dual insurance coverage or self-pay
+- lags in the implementation of the intervention
+- other relevant patient diagnoses
+
+For simplicity, we don't consider any of the above in this simulation.
 
 ### Compute Patient Outcome
 
-Unfold this 'Code' to see the code for joining the three tables together and computing the binary treatment indicator for care-management. 
+This analysis joins the three simulated data sets together and has one row per patient hospitalization. Readmission is the binary outcome of interest. For simplicity, there is at most one record per patient.
 
 ```{r}
 #| label: patient-outcome
@@ -219,7 +221,7 @@ patient_outcome %>%
 
 ## Exploratory Analysis
 
-Before fitting a statistical model to estimate the effect of interest, we provide some visualizations to understand the relationships among the features.
+Before fitting a statistical model to estimate the effect of interest, we provide some data summaries and visualizations to understand the relationships among the features.
 
 ```{r}
 #| label: eda
@@ -263,9 +265,15 @@ patient_outcome %>%
         p = "% Patients"
     ) %>%
     tab_footnote(
-        "TRUE if a patient is rehospitalized for any reason within 30 days of discharge",
+        "TRUE if a patient is readmitted within 30 days of discharge",
         cells_column_labels(readmit)
     )
+```
+
+This table shows the bivariate relationship between treatment (care management) and outcome (readmission). Patients receiving care management readmit at a lower rate. 
+
+```{r}
+#| label: readmit_by_treatment
 
 # readmission rate by treatment
 patient_outcome %>%
@@ -306,7 +314,45 @@ patient_outcome %>%
             rows = (readmit == 1 & has_intervention_pt == "No Care Management")
         )
     )
+```
 
+This plot shows the change in propensity to receive treatment, $P(T = 1)$, over time. The incremental nature of rolling out a care management intervention across practices means that more practices will have adopted the intervention by the end of the study period.
+
+Two implications for modeling:
+
+- we will only include years 2023-2025 in the model as there are not treatment cases during 2022
+- we need to assess if time is related to $Y$ in addition to $T$ to determine if it is a confounder
+
+
+```{r}
+#| label: treat_over_time
+
+# proportion of treated and untreated over time
+patient_outcome %>%
+    filter(!is.na(hosp_date)) %>%
+    select(has_intervention_pt, hosp_date) %>%
+    ggplot(aes(x = hosp_date, y = has_intervention_pt)) +
+    geom_jitter(alpha = 0.1, width = 0, height = 0.1) +
+    stat_smooth(method = "glm", method.args = list(family = binomial), se = FALSE) +
+    scale_y_continuous(breaks = c(0, 1), labels = c("No Care Mgmt", "Care Mgmt")) +
+    labs(
+        title = "Propensity to receive treatment over time",
+        subtitle = "Baseline trend from logistic model over time",
+        x = "Hospitalization Date",
+        y = NULL
+    )
+```
+
+
+These plot shows baseline readmission rates over time. The first plot shows the trend for all patients. The second plot shows separate trends for treated and control patients.
+
+The underlying decreasing trend indicates that time of hospitalization is a confounder. Time of hospitalization is related to both:
+
+- $T$: the propensity to be in the treatment group increases with time due to the incremental rollout, and
+- $Y$: the decreasing probability of readmission may be related to other macro-trends beyond care management
+
+```{r}
+#| label: treatment_over_time
 # readmission rates over time
 g_outcome_trend <- patient_outcome %>%
     filter(!is.na(hosp_date)) %>%
@@ -323,22 +369,8 @@ g_outcome_trend <- patient_outcome %>%
 
 g_outcome_trend
 g_outcome_trend + facet_wrap(~has_intervention_pt, ncol = 1)
-
-# proportion of treated and untreated over time
-patient_outcome %>%
-    filter(!is.na(hosp_date)) %>%
-    select(has_intervention_pt, hosp_date) %>%
-    ggplot(aes(x = hosp_date, y = has_intervention_pt)) +
-    geom_jitter(alpha = 0.1, width = 0, height = 0.1) +
-    stat_smooth(method = "glm", method.args = list(family = binomial), se = FALSE) +
-    scale_y_continuous(breaks = c(0, 1), labels = c("No Care Mgmt", "Care Mgmt")) +
-    labs(
-        title = "Rate of Readmissions over time",
-        subtitle = "Baseline trend from logistic model over time",
-        x = "Hospitalization Date",
-        y = NULL
-    )
 ```
+
 
 ```{r}
 #| label: eda2
@@ -391,17 +423,6 @@ ggplot(medicare_outcome_df, aes(x = medicare_mix, y = readmit_rate)) +
   ) +
     expand_limits(y = 0) +
     scale_y_continuous(breaks = pretty_breaks(8), label = percent)
-
-#lm(readmit_rate ~ medicare_mix, data = medicare_outcome_df) %>% tidy()
-# # readmit vs case management
-# patient_outcome %>%
-#     filter(
-#         esrd == 0,
-#         !is.na(hosp_date)
-#     ) %>%
-#     count(has_intervention_pt, readmit) %>%
-#     group_by(has_intervention_pt) %>%
-#     mutate(p = n / sum(n))
 ```
 
 ## Model
