@@ -4,11 +4,11 @@ format: html
 knitr:
   opts_chunk:
     code-fold: true
+    message: false
 ---
 
 ```{r}
-#| label: libraries
-#| message: false
+#| label: packages_data
 
 library(fs)
 library(tidyverse)
@@ -18,19 +18,18 @@ library(broom)
 library(gt)
 library(scales)
 theme_set(theme_bw())
-```
-
-## Read Data
-
-```{r}
-#| label: read-data
 
 prac <- read_parquet("practice-data.parquet")
-
 pat <- read_parquet("patients.parquet")
-
 hosp <- read_parquet("hospitalizations.parquet")
 ```
+
+**Note:** For readability, the code in this report is hidden by default. You can view any code section by cliciking >Code.
+
+Github simulation code 
+
+Github project repository
+
 
 ## Overview
 
@@ -212,34 +211,161 @@ patient_outcome %>%
 
 ## Exploratory Analysis
 
+Before fitting a statistical model to estimate the effect of interest, we provide some visualizations to understand the relationships among the features.
+
+
+
 ```{r}
 #| label: eda
 
 # hospitalization rate
 patient_outcome %>%
     count(is_hosp = !is.na(hosp_date)) %>%
-    mutate(p = n / sum(n))
-
-# hospitalization rate by insurance
-patient_outcome %>%
-    count(insurance, is_hosp = !is.na(hosp_date)) %>%
-    group_by(insurance) %>%
-    mutate(p = n / sum(n))
+    mutate(p = n / sum(n)) %>%
+    gt() %>%
+    tab_header(
+        "Distribution of Hospitalization",
+        subtitle = glue::glue("Among the {comma(nrow(patient_outcome))} patients in the study")
+    ) %>%
+    fmt_number(n, decimals = 0) %>%
+    fmt_percent(p, decimals = 1) %>%
+    cols_label(
+        is_hosp = "Hospitalized?",
+        n = "# Patients",
+        p = "% Patients"
+    ) %>%
+    tab_footnote(
+        "TRUE if a patient is hospitalized at least once from Jan 2022 through Dec 2025",
+        cells_column_labels(is_hosp)
+    )
 
 # readmission rate
 patient_outcome %>%
     filter(!is.na(hosp_date)) %>%
     count(readmit) %>%
-    mutate(p = n / sum(n))
+    mutate(p = n / sum(n)) %>%
+    gt() %>%
+    tab_header(
+        "30-day readmission",
+        subtitle = glue::glue("Among the {comma(nrow(patient_outcome %>% filter(!is.na(hosp_date))))} hospitalized in the study")
+    ) %>%
+    fmt_number(n, decimals = 0) %>%
+    fmt_percent(p, decimals = 1) %>%
+    cols_label(
+        readmit = "Readmission?",
+        n = "# Patients",
+        p = "% Patients"
+    ) %>%
+    tab_footnote(
+        "TRUE if a patient is rehospitalized for any reason within 30 days of discharge",
+        cells_column_labels(readmit)
+    )
+
+# readmission rate by treatment
+patient_outcome %>%
+    filter(!is.na(hosp_date)) %>%
+    count(has_intervention_pt, readmit) %>%
+    mutate(has_intervention_pt = factor(has_intervention_pt,
+                                        levels = c(0, 1),
+                                        labels = c("No Care Management", "Care Management"))) %>%
+    group_by(has_intervention_pt) %>%
+    mutate(p = n / sum(n)) %>%
+    gt() %>%
+    tab_header(
+        "30-day readmission",
+        subtitle = glue::glue("Among the {comma(nrow(patient_outcome %>% filter(!is.na(hosp_date))))} hospitalized in the study")
+    ) %>%
+    fmt_number(n, decimals = 0) %>%
+    fmt_percent(p, decimals = 1) %>%
+    cols_label(
+        readmit = "Readmission?",
+        n = "# Patients",
+        p = "% Patients"
+    ) %>%
+    # tab_footnote(
+    #     "Note: patients with care managment treatment have a lower rate of readmission",
+    #     cells_column_labels(p)
+    # ) %>%
+    tab_style(
+        style = cell_fill(color = "green"),
+        locations = cells_body(
+            columns = p, 
+            rows = (readmit == 1 & has_intervention_pt == "Care Management")
+        )
+    ) %>%
+       tab_style(
+        style = cell_fill(color = "yellow"),
+        locations = cells_body(
+            columns = p, 
+            rows = (readmit == 1 & has_intervention_pt == "No Care Management")
+        )
+    )
+
+# readmission rates over time
+g_outcome_trend <- patient_outcome %>%
+    filter(!is.na(hosp_date)) %>%
+    ggplot(aes(x = hosp_date, y = readmit)) +
+    geom_jitter(alpha = 0.1, width = 0, height = 0.1) +
+    stat_smooth(method = "glm", method.args = list(family = binomial), se = FALSE) +
+    scale_y_continuous(breaks = c(0, 1), labels = c("No Readmit", "Readmit")) +
+    labs(
+        title = "Rate of Readmissions over time",
+        subtitle = "Baseline trend from logistic model over time",
+        x = "Hospitalization Date",
+        y = NULL
+    )
+
+g_outcome_trend
+g_outcome_trend + facet_wrap(~has_intervention_pt, ncol = 1)
+
+# proportion of treated and untreated over time
+patient_outcome %>%
+    filter(!is.na(hosp_date)) %>%
+    select(has_intervention_pt, hosp_date) %>%
+    ggplot(aes(x = hosp_date, y = has_intervention_pt)) +
+    geom_jitter(alpha = 0.1, width = 0, height = 0.1) +
+    stat_smooth(method = "glm", method.args = list(family = binomial), se = FALSE) +
+    scale_y_continuous(breaks = c(0, 1), labels = c("No Care Mgmt", "Care Mgmt")) +
+    labs(
+        title = "Rate of Readmissions over time",
+        subtitle = "Baseline trend from logistic model over time",
+        x = "Hospitalization Date",
+        y = NULL
+    )
+```
+
+```{r}
+#| label: eda2
+
+# hospitalization rate by insurance
+patient_outcome %>%
+    filter(!is.na(hosp_date)) %>%
+    count(insurance, readmit) %>%
+    group_by(insurance) %>%
+    mutate(p = n / sum(n)) %>%
+    ungroup() %>% 
+    gt() %>%
+    tab_header("Readmission rate by insurance",
+            subtitle = "Among Hospitalized Patients") %>%
+    fmt_number(n, decimals = 0) %>%
+    fmt_percent(p, decimals = 1)
 
 # readmission rate by ESRD
 patient_outcome %>%
     filter(!is.na(hosp_date)) %>%
     count(esrd, readmit) %>%
     group_by(esrd) %>%
-    mutate(p = n / sum(n))
+    mutate(p = n / sum(n)) %>%
+    ungroup() %>%
+    gt() %>%
+    tab_header("Readmission rate by ESRD status",
+                subtitle = "Among Hospitalized Patients") %>%
+    fmt_number(n, decimals = 0) %>%
+    fmt_percent(p, decimals = 1)
+```
 
-
+```{r}
+#| label: eda-practice
 
 # per practice: medicare mix vs readmit rate
 medicare_outcome_df <- patient_outcome %>%
@@ -260,56 +386,60 @@ ggplot(medicare_outcome_df, aes(x = medicare_mix, y = readmit_rate)) +
     expand_limits(y = 0) +
     scale_y_continuous(breaks = pretty_breaks(8), label = percent)
 
-lm(readmit_rate ~ medicare_mix, data = medicare_outcome_df) %>% tidy()
-
-
-# readmit vs trend lines
-patient_outcome %>%
-    filter(!is.na(hosp_date)) %>%
-    ggplot(aes(x = hosp_date, y = readmit)) +
-    geom_jitter(alpha = 0.1, width = 0, height = 0.1) +
-    stat_smooth(method = "glm", method.args = list(family = binomial), se = FALSE) +
-    scale_y_continuous(breaks = c(0, 1), labels = c("No Readmit", "Readmit")) +
-    labs(
-        title = "Rate of Readmissions over time",
-        subtitle = "Baseline trend from logistic model over time",
-        x = "Hospitalization Date",
-        y = NULL
-    )
-
-
-# readmit vs case management
-patient_outcome %>%
-    filter(
-        esrd == 0,
-        !is.na(hosp_date)
-    ) %>%
-    count(has_intervention_pt, readmit) %>%
-    group_by(has_intervention_pt) %>%
-    mutate(p = n / sum(n))
+#lm(readmit_rate ~ medicare_mix, data = medicare_outcome_df) %>% tidy()
+# # readmit vs case management
+# patient_outcome %>%
+#     filter(
+#         esrd == 0,
+#         !is.na(hosp_date)
+#     ) %>%
+#     count(has_intervention_pt, readmit) %>%
+#     group_by(has_intervention_pt) %>%
+#     mutate(p = n / sum(n))
 ```
 
 ## Model
 
+### Inclusion Criteria
+
+- any patient hospitalized since 2023-01-01
+- patient does not have ESRD diagnosis
+
+### Model Consideration
+
+- should allow for baseline decreasing rate of readmissions over time
+- should allow for practice and patient level covariates
+- should allow for variation among practices beyond what is captured in practice-level covariates
+- 
 
 
-
-
-## GLM Model
+<!--
+### GLM Model
 
 ```{r}
 #| label: glm-model
 
-glm(
-  readmit ~ has_intervention_pt + hosp_date_days + age + sex + ssdi,
-  family = binomial(link = "logit"),
-  data = patient_outcome %>% filter(!is.na(hosp_date), esrd == 0)
-) %>%
-  tidy() %>%
-  gt()
+# model_data <- patient_outcome %>% 
+#     filter(
+#         !is.na(hosp_date), 
+#         hosp_date >= as.Date("2023-01-01"),
+#         esrd == 0
+#         )
+
+# glm(
+#   readmit ~ has_intervention_pt + hosp_date_days + age + sex + ssdi,
+#   family = binomial(link = "logit"),
+#   data = model_data
+# ) %>%
+#   tidy() %>%
+#   gt()
 ```
 
-## GLMER Model
+-->
+
+### GLMER Model
+
+- random effect induces a compound symmetry structure on the patient-level correlation matrix
 
 $$
 P(Y_{ij} = 1) = logit^{-1}(\alpha_j + \beta T_i + \gamma'X_i)
@@ -325,7 +455,7 @@ $$
 m2 <- glmer(
   readmit ~ (1 | practice_id) + has_intervention_pt + hosp_date_days + age + sex + ssdi,
   family = binomial,
-  data = patient_outcome %>% filter(!is.na(hosp_date), esrd == 0)
+  data = model_data
 )
 
 m2
