@@ -13,6 +13,8 @@ knitr:
     message: false
 ---
 
+**Note:** For readability, the code in this report is hidden by default. You can view any code section by cliciking >Code.
+
 ```{r}
 #| label: packages_data
 
@@ -30,34 +32,28 @@ pat <- read_parquet("patients.parquet")
 hosp <- read_parquet("hospitalizations.parquet")
 ```
 
-**Note:** For readability, the code in this report is hidden by default. You can view any code section by cliciking >Code.
+Github simulation [code](https://github.com/davechilders/post-discharge-intervention-analysis/blob/main/01-data-simulation.R)
 
-Github simulation code 
-
-Github project repository
+Github project [repo](https://github.com/davechilders/post-discharge-intervention-analysis)
 
 
-## Overview
+## Background and Research Question
+
+### Background
 
 Under traditional fee-for-service reimbursement, a primary care practice has limited financial incentive to reduce hospitalizations among their patient population. Value-based care is a healthcare delivery and payment models that reward providers for the quality of care and cost efficient. For example, a primary care practice might enter a financial contract with an insurance company that involves reimbursing the practice for limiting the total healthcare expenditures for patients attributed to that practice.
 
 Hospital admissions are a substantial component of total US healthcare spending. Reducing hospital readmissions during the 30-day post-discharge window is an opportunity to improve patient outcomes while reducing costs. Under fee-for-service, there is little incentive to invest in post-discharge care management to reduce readmission rates. However, value-based care models offer an opportunity for primary care providers to receive reimbursement for the savings obtained by reducing readmissions.
 
-## The Research Question
+### Research Question
 
 For a program designed to reduce the prevalence of hospital readmissions, it is important to assess the impact of that program in order to determine if the cost of the program justifies the reduction in healthcare spend and improvement in patient outcomes.
 
 In this analysis, we use simulated data to demonstrate estimtaing the impact of a primary care practice incorporating post-discharge care management on the probability of hospital readmission for any cause during 30 days.
 
-## Drivers of Readmission
+## Data Overview
 
-There are many factors beyond care management which may impact the probability of readmission, including:
-
-- patient clinical factors such as primary diagnosis and comorbidities
-- social drivers of heath including access to housing, social support, and transportation
-- quality of primary care
-
-## Simulated Data
+### Simulated Data Description
 
 For this analysis, we simulate data on practices, patients, and hospitalizations. 
 
@@ -68,7 +64,13 @@ In a real-world scenario, we would expect to see the following in the data:
 - the timing of the intervention will vary across practices
 - the rate of both hospitalization and readmission will vary by both patient and practice characteristics
 
-The simulated data for this analysis (available [here]) incorporates all of these features.
+There are also many factors beyond care management which may impact the probability of readmission, including:
+
+- patient clinical factors such as primary diagnosis and comorbidities
+- social drivers of heath including access to housing, social support, and transportation
+- quality of primary care
+
+The [simulated data](https://github.com/davechilders/post-discharge-intervention-analysis) for this analysis incorporates all of these characteristics.
 
 
 <!--
@@ -86,7 +88,7 @@ This is an overview of the simulation:
 - Age, gender, and medicare eligibility due to end-stage renal disease (ESRD) and social security disability (SSDI) are simulated
 -->
 
-## Practice Data
+### Practice Data
 
 This is a glimpse of the simulated practice data. 
 
@@ -113,7 +115,7 @@ prac %>%
     fmt_number(starts_with("n_"), decimals = 0)
 ```
 
-## Patient Data
+### Patient Data
 
 ```{r}
 #| label: patient-data
@@ -135,7 +137,7 @@ pat %>%
     tab_footnote("Patient ID is nested within Practice ID", cells_column_labels(patient_id))
 ```
 
-## Hospitalization and Readmission Data
+### Hospitalization and Readmission Data
 
 ```{r}
 #| label: hospitalization-data
@@ -154,7 +156,7 @@ hosp %>%
     cells_column_labels(hosp_date))
 ```
 
-## Other data issues not considered
+### Other data issues not considered
 
 - ESRD
 - other comborbidities
@@ -164,7 +166,7 @@ hosp %>%
 - Lags in implementation of intervention
 - Multiple hospitalizations and readmissions
 
-## Compute Patient Outcome
+### Compute Patient Outcome
 
 Unfold this 'Code' to see the code for joining the three tables together and computing the binary treatment indicator for care-management. 
 
@@ -182,7 +184,7 @@ patient_outcome <- pat %>%
       intervention_start > hosp_date ~ 0,
       TRUE ~ 1
     ),
-    hosp_date_days = as.integer(hosp_date - as.Date("2022-01-01")),
+    hosp_date_years = as.integer(hosp_date - as.Date("2022-01-01")) / 365,
   )
 ```
 
@@ -218,8 +220,6 @@ patient_outcome %>%
 ## Exploratory Analysis
 
 Before fitting a statistical model to estimate the effect of interest, we provide some visualizations to understand the relationships among the features.
-
-
 
 ```{r}
 #| label: eda
@@ -411,12 +411,13 @@ ggplot(medicare_outcome_df, aes(x = medicare_mix, y = readmit_rate)) +
 - any patient hospitalized since 2023-01-01
 - patient does not have ESRD diagnosis
 
-### Model Consideration
+### Model Considerations
 
 - should allow for baseline decreasing rate of readmissions over time
 - should allow for practice and patient level covariates
 - should allow for variation among practices beyond what is captured in practice-level covariates
-- 
+
+
 
 ```{r}
 #| label: model-data
@@ -442,7 +443,7 @@ model_data %>%
         readmit = "Readmission (Y)",
         n = "# Patients",
         p = "% of Patients"
-    )
+    ) 
 ```
 
 <!--
@@ -452,7 +453,7 @@ model_data %>%
 #| label: glm-model
 
 # glm(
-#   readmit ~ has_intervention_pt + hosp_date_days + age + sex + ssdi,
+#   readmit ~ has_intervention_pt + hosp_date_years + age + sex + ssdi,
 #   family = binomial(link = "logit"),
 #   data = model_data
 # ) %>%
@@ -462,23 +463,30 @@ model_data %>%
 
 -->
 
-### GLMER Model
-
-- random effect induces a compound symmetry structure on the patient-level correlation matrix
+### Generalized Linear Mixed Model
 
 $$
-P(Y_{ij} = 1) = logit^{-1}(\alpha_j + \beta T_i + \gamma'X_i)
+P(Y_{ij} = 1) = logit^{-1}(\alpha_j + \beta_1 T_i + \beta_2 X_{2i} + \beta_3 X_{3i} + \beta_4 X_{4i} + \beta_5 X_{5i})
 $$
 
 $$
 \alpha_j \sim N(0, \sigma^2_j)
 $$
 
+- $i$ indexes the patient
+- $j$ indexes the practice
+- $\alpha_j$ is the random effect for practice $j$
+- $T$ is the treatment of interest 
+- $X_2$ is a time covariate (time since beginning of study)
+- $X_3$ is age
+- $X_4$ is sex
+- $X_5$ is ssdi status
+
 ```{r}
 #| label: glmer-model
 
 m2 <- glmer(
-  readmit ~ (1 | practice_id) + has_intervention_pt + hosp_date_days + age + sex + ssdi,
+  readmit ~ (1 | practice_id) + has_intervention_pt + hosp_date_years + age + sex + ssdi,
   family = binomial,
   data = model_data
 )
@@ -495,15 +503,53 @@ m2_coeff <- summary(m2)$coefficients %>%
     as_tibble(rownames = "covariate") %>%
     rename(se = `Std. Error`)
 
-m2_coeff %>% inner_join(m2_confint, by = "covariate") %>%
+m2_results <- m2_coeff %>% inner_join(m2_confint, by = "covariate") %>%
     select(covariate, Estimate, se, lower95, upper95) %>%
     mutate(
-        est_odds = exp(Estimate),
+        odds_ratio = exp(Estimate),
         lower95_odds = exp(lower95),
         upper95_odds = exp(upper95)
     ) %>%
-    select(covariate, est_odds, lower95_odds, upper95_odds) %>%
-    gt() %>%
-    fmt_number(c(est_odds, lower95_odds, upper95_odds), decimals = 3) 
+    select(covariate, odds_ratio, lower95_odds, upper95_odds) %>%
+     mutate(covariate = recode_values(covariate,
+        "(Intercept)"           ~ "Intercept",
+        "has_intervention_pt" ~ "Treatment",
+        "hosp_date_years"      ~ "Years from study beginning",
+        "age"                 ~ "Age",
+        "sexM"                ~ "Male Indicator",
+        "ssdi"                ~ "SSDI Status"
+        ))
+
+gt(m2_results) %>%
+    fmt_number(c(odds_ratio, lower95_odds, upper95_odds), decimals = 3) %>%
+    cols_label(
+        covariate = "Covariate",
+        odds_ratio = "Odds Ratio",
+        lower95_odds = "Lower 95% CI",
+        upper95_odds = "Upper 95% CI"
+    ) %>%
+    tab_style(
+        style = cell_fill(color = "green"),
+        locations = cells_body(
+            columns = odds_ratio, 
+            rows = (covariate == "Treatment")
+        )
+    ) %>%
+    tab_footnote("Primary Effect of Interest",
+    cells_body(
+            columns = odds_ratio, 
+            rows = (covariate == "Treatment")
+        )
+     ) %>%
+    tab_footnote(
+        "CIs produced via Wald method for simplicity", 
+        cells_column_labels(c(lower95_odds, upper95_odds))
+        ) %>%
+    tab_footnote(
+        "Produced by exponentiating the raw coefficients",
+        cells_column_labels(odds_ratio)
+    )
+    
+
 ```
 

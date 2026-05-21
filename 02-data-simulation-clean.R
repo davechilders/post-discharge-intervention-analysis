@@ -105,8 +105,7 @@ d_intervene <- d %>%
 
 # write parquet
 d_intervene %>% select(-random_practice_effect) %>%
-  write_parquet("practice-data.parquet")
-
+  write_parquet("practice-{Sys.time()}.parquet")
 
 pt_df3 <- pt_df2 %>%
   left_join(d_intervene, by = "practice_id") %>%
@@ -125,7 +124,7 @@ pt_df3 <- pt_df2 %>%
       TRUE ~ 1
     ),
     # to get a baseline rate of .14
-    readmit_lp = -1.8 + random_practice_effect + 0.2 * (insurance == "medicare") - .0002 * hosp_date_days + .8 * esrd + .4 * ssdi + .01 * (age - 60) - .3 * has_intervention_pt,
+    readmit_lp = -1.8 + random_practice_effect + 0.2 * (insurance == "medicare")- .0002 * hosp_date_days + .8 * esrd + .4 * ssdi + .01 * (age - 60) - .3 * has_intervention_pt,
     readmit_p = 1 / (1 + exp(-readmit_lp)),
     readmit = as.integer(runif(nrow(.)) < readmit_p)
   ) 
@@ -133,10 +132,11 @@ pt_df3 <- pt_df2 %>%
 # patients
 pt_df3 %>%
   select(practice_id, patient_id, insurance, age, sex, esrd, ssdi) %>%
-  write_parquet("patients.parquet")
+  write_parquet("patients-{Sys.time()}.parquet")
 
 # hospitalizations
 pt_df3 %>%
   select(practice_id, patient_id, hosp_date, readmit) %>%
   filter(!is.na(hosp_date)) %>%
-  write_parquet("hospitalizations.parquet")
+  write_parquet("hospitalizations-{Sys.time()}.parquet")
+
