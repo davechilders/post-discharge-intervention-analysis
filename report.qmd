@@ -420,6 +420,23 @@ model_data <- patient_outcome %>%
         hosp_date >= as.Date("2023-01-01"),
         esrd == 0
         )
+
+model_data %>%
+    count(has_intervention_pt, readmit) %>%
+    mutate(p = n / sum(n)) %>%
+    gt() %>%
+    tab_header(
+        "Sample sizes for models",
+        subtitle = "Includes hospitalized patients meeting inclusion criteria"
+    ) %>%
+    fmt_number(n, decimals = 0) %>%
+    fmt_percent(p, decimals = 1) %>%
+    cols_label(
+        has_intervention_pt = "Treated (T)",
+        readmit = "Readmission (Y)",
+        n = "# Patients",
+        p = "% of Patients"
+    )
 ```
 
 <!--
@@ -460,15 +477,27 @@ m2 <- glmer(
   data = model_data
 )
 
-m2
-confint(m2, method = "Wald") # other options: profile, boot
+# other options: profile, boot
+m2_confint <- confint(m2, method = "Wald") %>%
+    as_tibble(rownames = "covariate") %>%
+    rename(
+        lower95 = `2.5 %`,
+        upper95 = `97.5 %`
+    )
+    
+m2_coeff <- summary(m2)$coefficients %>%
+    as_tibble(rownames = "covariate") %>%
+    rename(se = `Std. Error`)
 
-
-summary(m2)$coefficients %>%
-    as_tibble() %>%
+m2_coeff %>% inner_join(m2_confint, by = "covariate") %>%
+    select(covariate, Estimate, se, lower95, upper95) %>%
+    mutate(
+        est_odds = exp(Estimate),
+        lower95_odds = exp(lower95),
+        upper95_odds = exp(upper95)
+    ) %>%
+    select(covariate, est_odds, lower95_odds, upper95_odds) %>%
     gt() %>%
-    fmt_number(c(Estimate, `Std. Error`), decimals = 3) %>%
-    fmt_number(c(`z value`), decimals = 2) %>%
-    fmt_number(c(`Pr(>|z|)`), decimals = 4)
+    fmt_number(c(est_odds, lower95_odds, upper95_odds), decimals = 3) 
 ```
 
