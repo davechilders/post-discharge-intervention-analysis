@@ -33,6 +33,7 @@ reduction in 30-day readmission rates relative to non-adopting practices. We sim
 ## Tools
 
 - R, Quarto
+- parquet (cross-language file format for optimized storage and retrieval of columnar data)
 - `lme4` (GLMM estimation)
 - `tidyverse` (data simulation and wrangling)
 - `gt` (tables)
