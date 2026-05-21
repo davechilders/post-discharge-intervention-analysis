@@ -17,7 +17,7 @@ knitr:
 
 ```{r}
 #| label: packages_data
-
+options(browser = function(url) invisible(NULL))
 library(fs)
 library(tidyverse)
 library(arrow)
@@ -25,6 +25,7 @@ library(lme4)
 library(broom)
 library(gt)
 library(scales)
+library(brms)
 theme_set(theme_bw())
 
 prac <- read_parquet("practice-data.parquet")
@@ -371,6 +372,7 @@ g_outcome_trend
 g_outcome_trend + facet_wrap(~has_intervention_pt, ncol = 1)
 ```
 
+Here, we check on the bivariate relationships between both ESRD status and insurance and the outcome.
 
 ```{r}
 #| label: eda2
@@ -402,6 +404,8 @@ patient_outcome %>%
     fmt_percent(p, decimals = 1)
 ```
 
+We saw that medicare patients have a higher rate of readmission. Aggregating to the practice level, we see that practices with a higher medicare mix also have higher readmission rates.
+
 ```{r}
 #| label: eda-practice
 
@@ -417,7 +421,7 @@ ggplot(medicare_outcome_df, aes(x = medicare_mix, y = readmit_rate)) +
   geom_point(alpha = 0.5) +
   labs(
     title = "Readmit rate vs Medicare Mix",
-    subtitle = "One dot per practice",
+    subtitle = "One observation per practice",
     x = "% Patients with Medicare",
     y = "Readmission Rate"
   ) +
@@ -434,11 +438,10 @@ ggplot(medicare_outcome_df, aes(x = medicare_mix, y = readmit_rate)) +
 
 ### Model Considerations
 
-- should allow for baseline decreasing rate of readmissions over time
-- should allow for practice and patient level covariates
-- should allow for variation among practices beyond what is captured in practice-level covariates
-
-
+- allow for baseline decreasing rate of readmissions over time
+- allow for practice and patient level covariates
+- allow for variation among practices beyond what is captured in practice-level covariates
+- accomodate the hierarchical dependency that arises from patients being grouped within practices
 
 ```{r}
 #| label: model-data
@@ -486,6 +489,8 @@ model_data %>%
 
 ### Generalized Linear Mixed Model
 
+We fit a generalized linear mixed model that models the probability of readmission for individual $i$ in practice $j$. This is an extension of a generalized linear model (with logit link) that allows for random practice-level effects.
+
 $$
 P(Y_{ij} = 1) = logit^{-1}(\alpha_j + \beta_1 T_i + \beta_2 X_{2i} + \beta_3 X_{3i} + \beta_4 X_{4i} + \beta_5 X_{5i})
 $$
@@ -503,7 +508,15 @@ $$
 - $X_4$ is sex
 - $X_5$ is ssdi status
 
-## Results
+There are several approaches to fit this model. We could:
+
+- fit an approximateion to the marginal log-likelihood using `lme4::glmer()`
+- fit a fully Bayesian model using `brms()`
+- use generalized estimating equations instead of a multilevel
+
+Here, we choose `glmer()` but other options are reasonable.
+
+## Frequentist Results
 
 ```{r}
 #| label: glmer-model
@@ -572,7 +585,86 @@ gt(m2_results) %>%
         "Produced by exponentiating the raw coefficients",
         cells_column_labels(odds_ratio)
     )
-    
-
 ```
 
+## Bayesian Results
+
+The results of the bayesian analysis obtained via brms are consistent with the frequentist likelihood-based approach using `lmer4::glmer()`.
+
+```{r}
+#| label: brms-model
+
+mbayes <- brm(
+  readmit ~ (1 | practice_id) + has_intervention_pt + hosp_date_years + age + sex + ssdi,
+  family = bernoulli(link = "logit"),
+  data = model_data,
+  prior = c(
+    prior(normal(0, 2.5), class = b),
+    prior(normal(0, 2.5), class = Intercept),
+    prior(exponential(1),  class = sd)
+  ),
+  chains = 4,
+  iter = 2000,       # 1000 warmup + 1000 sampling per chain by default
+  warmup = 1000,
+  cores = 4,
+  seed = 42
+)
+
+# posterior predictive check of mean readmission rate
+pp_check(mbayes, type = "stat", stat = "mean")
+
+# verify convergence among the chains
+
+fixef_results <- fixef(mbayes) %>%
+    as_tibble(rownames = "covariate") %>%
+    mutate(
+        odds_ratio = exp(Estimate),
+        lower95_odds = exp(`Q2.5`),
+        upper95_odds = exp(`Q97.5`)
+    ) %>%
+    select(covariate, odds_ratio, lower95_odds, upper95_odds) %>%
+     mutate(covariate = recode_values(covariate,
+        "Intercept"           ~ "Intercept",
+        "has_intervention_pt" ~ "Treatment",
+        "hosp_date_years"      ~ "Years from study beginning",
+        "age"                 ~ "Age",
+        "sexM"                ~ "Male Indicator",
+        "ssdi"                ~ "SSDI Status"
+        ))
+
+gt(fixef_results) %>%
+    tab_header("Fixed Effects from Bayesian Model",
+    subtitle = "Model fit using brms interface to Stan") %>%
+    fmt_number(c(odds_ratio, lower95_odds, upper95_odds), decimals = 3) %>%
+    cols_label(
+        covariate = "Covariate",
+        odds_ratio = "Odds Ratio",
+        lower95_odds = "Lower 95% CI",
+        upper95_odds = "Upper 95% CI"
+    ) %>%
+    tab_style(
+        style = cell_fill(color = "green"),
+        locations = cells_body(
+            columns = odds_ratio, 
+            rows = (covariate == "Treatment")
+        )
+    ) %>%
+    tab_footnote("Primary Effect of Interest",
+    cells_body(
+            columns = odds_ratio, 
+            rows = (covariate == "Treatment")
+        )
+     ) %>%
+    tab_footnote(
+        "Posterior Credible Intervals", 
+        cells_column_labels(c(lower95_odds, upper95_odds))
+        ) %>%
+    tab_footnote(
+        "Produced by exponentiating the raw coefficients",
+        cells_column_labels(odds_ratio)
+    )
+```
+
+## Conclusion
+
+In this simulation, post-discharge care management is associated with a 30% reduced odds ($\frac{P(Y=1)}{P(Y=0)}$) of readmission.  
