@@ -1,5 +1,5 @@
 ---
-title: "Assessing Impact of Post-Discharge Care Mangement on Hospital Readmissions"
+title: "Assessing Impact of Post-Discharge Care Management on Hospital Readmissions"
 author: "Dave Childers"
 date: today
 format:
@@ -13,7 +13,7 @@ knitr:
     message: false
 ---
 
-**Note:** For readability, the code in this report is hidden by default. You can view any code section by cliciking >Code.
+**Note:** For readability, the code in this report is hidden by default. You can view any code section by clicking `>Code`.
 
 ```{r}
 #| label: packages_data
@@ -41,7 +41,7 @@ Github project [repo](https://github.com/davechilders/post-discharge-interventio
 
 ### Background
 
-Under traditional fee-for-service reimbursement, a primary care practice has limited financial incentive to reduce hospitalizations among their patient population. Value-based care is a healthcare delivery and payment models that reward providers for the quality of care and cost efficient. For example, a primary care practice might enter a financial contract with an insurance company that involves reimbursing the practice for limiting the total healthcare expenditures for patients attributed to that practice.
+Under traditional fee-for-service reimbursement, a primary care practice has limited financial incentive to reduce hospitalizations among their patient population. Value-based care is a healthcare delivery and payment model that reward providers for the quality of care and cost efficient. For example, a primary care practice might enter a financial contract with an insurance company that involves reimbursing the practice for limiting the total healthcare expenditures for patients attributed to that practice.
 
 Hospital admissions are a substantial component of total US healthcare spending. Reducing hospital readmissions during the 30-day post-discharge window is an opportunity to improve patient outcomes while reducing costs. Under fee-for-service, there is little incentive to invest in post-discharge care management to reduce readmission rates. However, value-based care models offer an opportunity for primary care providers to receive reimbursement for the savings obtained by reducing readmissions.
 
@@ -49,7 +49,7 @@ Hospital admissions are a substantial component of total US healthcare spending.
 
 For a program designed to reduce the prevalence of hospital readmissions, it is important to assess the impact of that program in order to determine if the cost of the program justifies the reduction in healthcare spend and improvement in patient outcomes.
 
-In this analysis, we use simulated data to demonstrate estimtaing the impact of a primary care practice incorporating post-discharge care management on the probability of hospital readmission for any cause during 30 days.
+In this analysis, we use simulated data to demonstrate estimating the impact of a primary care practice incorporating post-discharge care management on the probability of hospital readmission for any cause during 30 days.
 
 ## Data Overview
 
@@ -159,10 +159,10 @@ hosp %>%
 ### Other data issues not considered
 
 - ESRD
-- other comborbidities
+- other comorbidities
 - patient attribution
 - Dual eligibility
-- Other coviarates
+- Other covariates
 - Lags in implementation of intervention
 - Multiple hospitalizations and readmissions
 
