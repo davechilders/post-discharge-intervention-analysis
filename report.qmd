@@ -611,9 +611,8 @@ mbayes <- brm(
 )
 
 # posterior predictive check of mean readmission rate
-pp_check(mbayes, type = "stat", stat = "mean")
+#pp_check(mbayes, type = "stat", stat = "mean")
 
-# verify convergence among the chains
 
 fixef_results <- fixef(mbayes) %>%
     as_tibble(rownames = "covariate") %>%
